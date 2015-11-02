@@ -1,3 +1,6 @@
+# Project specific
+build/*
+
 # Compiled Object files
 *.slo
 *.lo
