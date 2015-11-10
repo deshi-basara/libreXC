@@ -1,13 +1,12 @@
-#====================================================================#
-# Advanced static library exmaple
-#====================================================================#
-generate_arduino_library(blink_lib
-    SRCS blink_lib.cpp
-    HDRS blink_lib.h)
+set(CMAKE_TOOLCHAIN_FILE cmake/ArduinoToolchain.cmake) # Arduino Toolchain
+cmake_minimum_required(VERSION 2.8)
 
 #====================================================================#
-# Advanced firwmare example
+#  Setup Project                                                     #
 #====================================================================#
-generate_arduino_firmware(blink
-    SRCS blink.cpp
-    LIBS blink_lib)
+project(libreXC C CXX)
+
+#print_board_list()
+#print_programmer_list()
+
+add_subdirectory(arduino)   #add the arduino directory into build
