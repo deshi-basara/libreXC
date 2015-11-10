@@ -1,0 +1,6 @@
+autobahn==0.10.9
+futures==3.0.3
+six==1.10.0
+trollius==2.0
+txaio==2.0.4
+wheel==0.24.0
