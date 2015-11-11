@@ -7,7 +7,7 @@ from security import Security
 from config import Config
 
 
-class WebsocketEvents(WebSocketServerProtocol):
+class LibreSocketEvents(WebSocketServerProtocol):
     """
     Implementation of all available websocket-events with their handlers.
     """
@@ -28,6 +28,14 @@ class WebsocketEvents(WebSocketServerProtocol):
             raise HttpException(401, "Invalid authentication data.")
         else:
             print("Authenticated: {0}".format(request.peer))
+            self.factory.add_client(self)
+
+    def onOpen(self):
+        """
+        Called whenever a newly authenticated client has opened his
+        socket-connection.
+        """
+        pass
 
     def onMessage(self, payload, isBinary):
         """
@@ -39,14 +47,57 @@ class WebsocketEvents(WebSocketServerProtocol):
 
         received_cmd = payload.decode('utf8')
 
-        # echo back message
-        self.sendMessage(payload, isBinary)
+        # send test broadcast
+        self.factory.broadcast('{"key":"value"}')
 
     def onClose(self, wasClean, code, reason):
         """
         Called whenever a client closes his connection.
         """
         print("WebSocket connection closed: {0}".format(reason))
+        self.factory.remove_client(self)
+
+
+class LibreSocketFactory(WebSocketServerFactory):
+    """
+    WebSocketServerFactory with extended features for managing connected
+    clients and broadcasts.
+    """
+
+    def __init__(self, socket_url, debug=False, debugCodePaths=False):
+        WebSocketServerFactory.__init__(
+            self,
+            socket_url,
+            debug=debug,
+            debugCodePaths=debugCodePaths
+        )
+        self.subscribers = []
+
+    def add_client(self, client):
+        """
+        Checks if a newly authenticated client is already a subscriber for
+        our logging data. If not, the client will be added.
+        """
+        if client not in self.subscribers:
+            self.subscribers.append(client)
+            client_count = len(self.subscribers)
+            print("Connected clients: {0} (+1)".format(client_count))
+
+    def remove_client(self, client):
+        """
+        Removes a client from the subscriber-list.
+        """
+        if client in self.subscribers:
+            self.subscribers.remove(client)
+            client_count = len(self.subscribers)
+            print("Connected clients: {0} (-1)".format(client_count))
+
+    def broadcast(self, json):
+        """
+        Broadcasts a json-string to all subscibed clients.
+        """
+        for subscriber in self.subscribers:
+            subscriber.sendMessage(json.encode("utf-8"))
 
 
 class Websocket(object):
@@ -60,8 +111,8 @@ class Websocket(object):
         socket_url = u"ws://{0}:{1}".format(host, port)
 
         # factory for creating instances of the WebsocketEvents-class
-        factory = WebSocketServerFactory(socket_url, debug=False)
-        factory.protocol = WebsocketEvents
+        factory = LibreSocketFactory(socket_url, debug=False)
+        factory.protocol = LibreSocketEvents
 
         # create server socket inside the event loop
         self.loop = asyncio.get_event_loop()
@@ -80,3 +131,6 @@ class Websocket(object):
         self.socket_server.close()
         self.loop.close()
         print("WebSocket closed")
+
+    def update(self, json):
+        factory.broadcast(json)
