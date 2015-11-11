@@ -1,13 +1,28 @@
 import ConfigParser
 
+# parse config.ini on runtime
+config_file = ConfigParser.ConfigParser()
+config_file.read("../config.ini")
+
 
 class Config(object):
-    config_path = "../config.ini"
+    """
+    Implements a layer of static getter-methods for fetching config-values
+    from config.ini.
+    """
 
-    def __init__(self):
-        self.config = ConfigParser.ConfigParser()
-        self.config.read(config_path)
+    @staticmethod
+    def get_user():
+        return config_file.get("auth", "user")
 
-    def get_user(self):
-        key = "user"
-        return self.config.get("auth", key)
+    @staticmethod
+    def get_password():
+        return config_file.get("auth", "password")
+
+    @staticmethod
+    def get_socket_port():
+        return config_file.get("websocket", "port")
+
+    @staticmethod
+    def get_socket_host():
+        return config_file.get("websocket", "host")
