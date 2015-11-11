@@ -32,3 +32,4 @@ build/*
 
 # Custom
 linuino/venv
+linuino/*.pyc
