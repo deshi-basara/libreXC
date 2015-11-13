@@ -1,7 +1,7 @@
-import trollius as asyncio
-
-from autobahn.asyncio.websocket import WebSocketServerProtocol, \
+from threading import Thread
+from autobahn.twisted.websocket import WebSocketServerProtocol, \
     WebSocketServerFactory
+from twisted.internet import reactor
 from autobahn.websocket.http import HttpException
 from security import Security
 from config import Config
@@ -96,41 +96,43 @@ class LibreSocketFactory(WebSocketServerFactory):
         """
         Broadcasts a json-string to all subscibed clients.
         """
+        print("broadcasting")
         for subscriber in self.subscribers:
             subscriber.sendMessage(json.encode("utf-8"))
 
 
-class Websocket(object):
+class Websocket(Thread):
     """
     Initiates a websocket-server on the given host and port from .config.ini.
     All websocket-connections are managed inside WebsocketEvents-class.
     """
 
-    def __init__(self, host, port):
+    def __init__(self, _host, _port, _data):
+        super(Websocket, self).__init__()
+        self.host = _host
+        self.port = _port
+        self.data = _data
+
         # @todo use wss for encrypted socket-transport
-        socket_url = u"ws://{0}:{1}".format(host, port)
+        self.socket_url = u"ws://{0}:{1}".format(self.host, self.port)
+        self.factory = LibreSocketFactory(self.socket_url, debug=False)
 
+    def run(self):
         # factory for creating instances of the WebsocketEvents-class
-        factory = LibreSocketFactory(socket_url, debug=False)
-        factory.protocol = LibreSocketEvents
-
-        # create server socket inside the event loop
-        self.loop = asyncio.get_event_loop()
-        coroutine = self.loop.create_server(factory, '0.0.0.0', port)
-        self.socket_server = self.loop.run_until_complete(coroutine)
-        print("WebSocket started on: {0}".format(socket_url))
-
+        self.factory.protocol = LibreSocketEvents
         try:
-            self.loop.run_forever()
-        except KeyboardInterrupt:
-            pass
-        finally:
-            self.close()
+            reactor.listenTCP(9000, self.factory)
+            print("WebSocket started on: {0}".format(self.socket_url))
+            reactor.run(installSignalHandlers=0)
+        except Exception as e:
+            print(e)
 
     def close(self):
-        self.socket_server.close()
-        self.loop.close()
+        self.factory.close()
         print("WebSocket closed")
 
-    def update(self, json):
-        factory.broadcast(json)
+    def update(self, _json):
+        reactor.callFromThread(
+            self.factory.broadcast,
+            _json
+        )
