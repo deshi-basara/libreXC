@@ -26,3 +26,11 @@ class Config(object):
     @staticmethod
     def get_socket_host():
         return config_file.get("websocket", "host")
+
+    @staticmethod
+    def get_log_format():
+        return config_file.get("logger", "format")
+
+    @staticmethod
+    def get_log_path():
+        return config_file.get("logger", "path")
