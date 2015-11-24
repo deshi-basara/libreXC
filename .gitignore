@@ -1,5 +1,5 @@
 # Project specific
-build/*
+arduino/build/*
 
 # Compiled Object files
 *.slo
