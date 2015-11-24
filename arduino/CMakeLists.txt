@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 2.8)
 #====================================================================#
 project(libreXC C CXX)
 
+include(CMakeConfig.txt)
+
 #print_board_list()
 #print_programmer_list()
 

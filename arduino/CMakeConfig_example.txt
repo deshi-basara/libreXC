@@ -1,0 +1,4 @@
+# Rename this file to CMakeConfig.txt
+
+set(ARDUINO_DEFAULT_BOARD leonardo) # Default Board ID, when not specified
+set(ARDUINO_DEFAULT_PORT /dev/tty.usbmodem1411) # Default Port, when not specified
