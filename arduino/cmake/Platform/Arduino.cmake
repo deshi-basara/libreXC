@@ -654,33 +654,40 @@ function(REGISTER_HARDWARE_PLATFORM PLATFORM_PATH)
             set(${PLATFORM}_PLATFORM_PATH ${PLATFORM_PATH} CACHE INTERNAL "The path to ${PLATFORM}")
             set(ARDUINO_PLATFORMS ${ARDUINO_PLATFORMS} ${PLATFORM} CACHE INTERNAL "A list of registered platforms")
 
+            # small bugfix for linux distributions with an additional "avr"-folder
+            if(EXISTS "${ARDUINO_SDK_PATH}/hardware/arduino/avr")
+                set(PLATFORM_PATH_ARCH "${ARDUINO_SDK_PATH}/hardware/arduino/avr")
+            else()
+                set(PLATFORM_PATH_ARCH "${ARDUINO_SDK_PATH}/hardware/arduino")
+            endif()
+
             find_file(${PLATFORM}_CORES_PATH
                   NAMES cores
-                  PATHS ${PLATFORM_PATH}
+                  PATHS ${PLATFORM_PATH} ${PLATFORM_PATH_ARCH}
                   DOC "Path to directory containing the Arduino core sources.")
 
             find_file(${PLATFORM}_VARIANTS_PATH
                   NAMES variants
-                  PATHS ${PLATFORM_PATH}
+                  PATHS ${PLATFORM_PATH} ${PLATFORM_PATH_ARCH}
                   DOC "Path to directory containing the Arduino variant sources.")
 
             find_file(${PLATFORM}_BOOTLOADERS_PATH
                   NAMES bootloaders
-                  PATHS ${PLATFORM_PATH}
+                  PATHS ${PLATFORM_PATH} ${PLATFORM_PATH_ARCH}
                   DOC "Path to directory containing the Arduino bootloader images and sources.")
 
             find_file(${PLATFORM}_PROGRAMMERS_PATH
                 NAMES programmers.txt
-                PATHS ${PLATFORM_PATH}
+                PATHS ${PLATFORM_PATH} ${PLATFORM_PATH_ARCH}
                 DOC "Path to Arduino programmers definition file.")
 
             find_file(${PLATFORM}_BOARDS_PATH
                 NAMES boards.txt
-                PATHS ${PLATFORM_PATH}
+                PATHS ${PLATFORM_PATH} ${PLATFORM_PATH_ARCH}
                 DOC "Path to Arduino boards definition file.")
 
             if(${PLATFORM}_BOARDS_PATH)
-                load_arduino_style_settings(${PLATFORM}_BOARDS "${PLATFORM_PATH}/boards.txt")
+                load_arduino_style_settings(${PLATFORM}_BOARDS "${PLATFORM_PATH_ARCH}/boards.txt")
             endif()
 
             if(${PLATFORM}_PROGRAMMERS_PATH)
@@ -2135,6 +2142,7 @@ set(ARDUINO_AVRDUDE_FLAGS -V                              CACHE STRING "")
 #                          Initialization                                     
 #=============================================================================#
 if(NOT ARDUINO_FOUND AND ARDUINO_SDK_PATH)
+
     register_hardware_platform(${ARDUINO_SDK_PATH}/hardware/arduino/)
 
     find_file(ARDUINO_LIBRARIES_PATH
@@ -2229,4 +2237,3 @@ if(NOT ARDUINO_FOUND AND ARDUINO_SDK_PATH)
         ARDUINO_OBJCOPY_HEX_FLAGS
         AVRSIZE_PROGRAM)
 endif()
-
