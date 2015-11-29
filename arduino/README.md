@@ -34,3 +34,22 @@ Beim cmake-Befehl muss der Port entsprechend an das Betriebssystem und das verwe
 Wenn der cmake-Befehl einmal ausgeführt ist, reicht fortan der make-Befehl (auch bei Änderungen an dem CMakeLists.txt's).
 
 Das build-Verzeichnis ist über einen Eintrag in der .gitignore-Datei geschützt. Bitte nur in dieses Verzeichnis hinein kompilieren.
+
+
+
+### Troubleshooting
+
+#### '.avrdude: butterfly_recv(): programmer is not responding' during ``make upload``
+
+Arduino-Yun has to be resetted before new binaries can be flashed. Therefore you can push Yun's reset-button two times in a row and execute ``make upload`` while ``L13-led`` is pulsating red or use the serial-connection to force a reset:
+
+```Shell
+$  stty -F /dev/ttyACM0 1200 && sleep 1 && make upload
+```
+``stty`` forces a reset of your Yun by openning and closing serial-port ``/dev/ttyACM0`` with 1200bps. 
+
+The usage of ``reset_serial.py`` is recommended for automating this steps:
+
+```Shell
+$  python reset_serial.py
+```
