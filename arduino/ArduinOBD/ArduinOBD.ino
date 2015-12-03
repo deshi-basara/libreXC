@@ -6,7 +6,9 @@
 #include <SoftwareSerial.h>
 
 
-SoftwareSerial elm(2,3);
+// Important:
+// Software Serial RX only possible on the following pins: 8, 9, 10, 11, 14 (MISO), 15 (SCK), 16 (MOSI).
+SoftwareSerial elm(9,10);
 
 // char buffer for serial Data
 char rxData[20];
@@ -51,6 +53,12 @@ void loop() {
   elm_get_voltage();
   delay(100);
  
-  //Serial.write("Hello Car!");
+  Serial.write("Data: ");
+  Serial.print("Speed: ");
+  Serial.print(vehicleSpeed);
+  Serial.print(" RPM: ");
+  Serial.print(vehicleRPM);
+  Serial.print(" Temp: ");
+  Serial.println(vehicleCoolantTemp);
   // Test Code Viktor end : FEEL FREE TO REMOVE
 }
