@@ -47,5 +47,5 @@ $  stty -F /dev/ttyACM0 1200 && sleep 1 && make upload
 The usage of ``reset_serial.py`` is recommended for automating this steps:
 
 ```Shell
-$  python ..reset_serial.py && make upload
+$  python ../reset_serial.py && make upload
 ```
