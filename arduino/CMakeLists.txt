@@ -8,7 +8,5 @@ project(libreXC C CXX)
 
 include(CMakeConfig.txt)
 
-#print_board_list()
-#print_programmer_list()
-
-add_subdirectory(arduino)   #add the arduino directory into build
+generate_arduino_firmware(ArduinOBD
+    SKETCH ArduinOBD)
