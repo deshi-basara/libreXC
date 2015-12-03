@@ -1,4 +1,5 @@
 build/*
 CMakeConfig.txt
 reset_serial_config.py
+reset_serial_config.pyc
 *.pyc
