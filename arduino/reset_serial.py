@@ -8,8 +8,9 @@ except:
     sys.exit(0)
 
 
-# Default serial port
-serial_port = "/dev/ttyACM0"
+# import serial port from config file
+import reset_serial_config
+
 sleeping_time = 1  # sec
 
 
@@ -31,7 +32,7 @@ def reset(_port, _time):
 
 
 def main():
-    reset(serial_port, sleeping_time)
+    reset(reset_serial_config.serial_port, sleeping_time)
 
 
 if __name__ == "__main__":
