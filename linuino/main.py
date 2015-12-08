@@ -22,19 +22,22 @@ def main():
     Initiates all components that are needed after arduino-yun's linuino
     has started.
     """
-    # initiate data-thread
-    data = Data()
-    data.daemon = True
-    data.start()
+    threads = []
 
-    # initiate socket-threads
+    # initiate all needed threads
+    data_thread = Data()
     socket_thread = Websocket(
         Config.get_socket_host(),
         Config.get_socket_port(),
-        data
+        data_thread
     )
-    socket_thread.daemon = True
-    socket_thread.start()
+    threads.append(data_thread)
+    threads.append(socket_thread)
+
+    # start all needed threads
+    for thread in threads:
+        thread.daemon = True
+        thread.start()
 
     # add observers to data-object
     # logger = Logger("default", data)

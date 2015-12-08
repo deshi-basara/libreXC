@@ -122,7 +122,7 @@ class Websocket(Thread):
         self.factory.protocol = LibreSocketEvents
         try:
             reactor.listenTCP(9000, self.factory)
-            print("WebSocket started on: {0}".format(self.socket_url))
+            print("WebSocket-Thread: Started on {0}".format(self.socket_url))
             reactor.run(installSignalHandlers=0)
         except Exception as e:
             print(e)

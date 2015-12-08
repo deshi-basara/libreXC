@@ -28,6 +28,10 @@ class Config(object):
         return config_file.get("websocket", "host")
 
     @staticmethod
+    def get_socket_timeout():
+        return float(config_file.get("websocket", "timeout"))
+
+    @staticmethod
     def get_log_format():
         return config_file.get("logger", "format")
 
