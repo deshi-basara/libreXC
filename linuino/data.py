@@ -1,7 +1,9 @@
+import Queue
+import time
+
 from threading import Thread
 from libs.bridgeclient import BridgeClient
-
-import Queue
+from config import Config
 
 
 class Data(Thread):
@@ -9,6 +11,7 @@ class Data(Thread):
         super(Data, self).__init__()
         self.queue = Queue.Queue(maxsize=100)
         self.observers = []
+        self.socket_timeout = Config.get_socket_timeout()
 
     def add_data(self, json):
         print("data added")
@@ -23,12 +26,17 @@ class Data(Thread):
         bridge = BridgeClient()
 
         while True:
-            # log_data = bridge.get("json")
-            log_data = "running"
-            # print(log_data)
-            if log_data:
-                print(log_data)
-                # self.add_data(log_data)"""
+            # listen for bridge-commands
+            try:
+                log_data = bridge.get("json")
+
+                if log_data:
+                    print(log_data)
+                    # self.add_data(log_data)
+            except Exception as e:
+                # print exception and let Thread sleep
+                print("Data-Thread Error: {}".format(e))
+                time.sleep(self.socket_timeout)
 
     def notify(self, json):
         print("notify observer")
