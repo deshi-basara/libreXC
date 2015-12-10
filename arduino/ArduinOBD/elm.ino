@@ -22,11 +22,81 @@ void elm_start_com(){
 // Query available PIDs
 void elm_check_PIDs() {
   
-  elm.println("0100");
+  elm.println("0100"); //Returns 4 Bytes: Pids 01 - 32
   
-  String raw_pids = rxData;
-  raw_pids.trim();
+  // First response = echo of command
+  getResponse();
   
+  // Second response = actual response data
+  getResponse();  
+  
+  int raw_pids1 = strtol(&rxData[6],0,16);
+  int raw_pids2 = strtol(&rxData[9],0,16);
+  int raw_pids3 = strtol(&rxData[12],0,16);
+  int raw_pids4 = strtol(&rxData[15],0,16);
+  
+  String pids_string = String(raw_pids1, BIN); 
+  pids_string += String(raw_pids2, BIN); 
+  pids_string += String(raw_pids3, BIN); 
+  pids_string += String(raw_pids4, BIN);
+  
+  
+  delay(100);
+  
+  elm.println("0120"); //Returns 4 Bytes: Pids 33 - 64
+  
+  // First response = echo of command
+  getResponse();
+  
+  // Second response = actual response data
+  getResponse();  
+  
+  raw_pids1 = strtol(&rxData[6],0,16);
+  raw_pids2 = strtol(&rxData[9],0,16);
+  raw_pids3 = strtol(&rxData[12],0,16);
+  raw_pids4 = strtol(&rxData[15],0,16);
+  
+  pids_string += String(raw_pids1, BIN); 
+  pids_string += String(raw_pids2, BIN); 
+  pids_string += String(raw_pids3, BIN); 
+  pids_string += String(raw_pids4, BIN); 
+  
+  delay(100);
+  
+  elm.println("0140"); //Returns 4 Bytes: Pids 65 - 96
+  
+  // First response = echo of command
+  getResponse();
+  
+  // Second response = actual response data
+  getResponse();  
+  
+  raw_pids1 = strtol(&rxData[6],0,16);
+  raw_pids2 = strtol(&rxData[9],0,16);
+  raw_pids3 = strtol(&rxData[12],0,16);
+  raw_pids4 = strtol(&rxData[15],0,16);
+  
+  pids_string += String(raw_pids1, BIN); 
+  pids_string += String(raw_pids2, BIN); 
+  pids_string += String(raw_pids3, BIN); 
+  pids_string += String(raw_pids4, BIN); 
+  
+  
+  
+  
+  Serial.println(pids_string);
+  
+  /*
+  for(int i = 0; i < pids_string.length() -1; i++) {
+    
+    if ( pids_string.charAt(i) == '1' ) {
+      supported_pids[i] = true;
+    }  else {
+      supported_pids[i] = false;  
+    }
+    
+  }
+  */
   // TODO: Save available PIDs in a global pid list
 }
 

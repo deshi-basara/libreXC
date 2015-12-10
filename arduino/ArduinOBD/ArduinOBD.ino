@@ -15,12 +15,14 @@ char rxData[20];
 char rx_i=0;
 
 
+//
+boolean supported_pids[128];
 
 //Variables to hold the speed and RPM data.
-int vehicleSpeed = 0;
-int vehicleRPM = 0;
-int vehicleCoolantTemp = 0;
-float vehicleVoltage = 0;
+int vehicleSpeed = 0; ///DEBUG
+int vehicleRPM = 0; ///DEBUG
+int vehicleCoolantTemp = 0; ///DEBUG
+float vehicleVoltage = 0; ///DEBUG
 
 void setup() {
   
@@ -29,7 +31,10 @@ void setup() {
   elm.begin(9600);
   Serial.begin(9600);
   
-  delay(1500);
+  delay(50); // Wait for Serial readiness
+  Serial.println(F("OBDuino Debug Console")); ///DEBUG Remove later
+  
+  delay(1500); 
   elm_start_com();
   delay(500);
 }
@@ -44,6 +49,8 @@ void loop() {
   digitalWrite(13,LOW);
   delay(100);
 
+  elm_check_PIDs();
+  delay(100);
   vehicleSpeed = elm_get_speed();
   delay(100);
   vehicleRPM = elm_get_rpm();
@@ -60,5 +67,7 @@ void loop() {
   Serial.print(vehicleRPM);
   Serial.print(" Temp: ");
   Serial.println(vehicleCoolantTemp);
+  
+  delay(1300);
   // Test Code Viktor end : FEEL FREE TO REMOVE
 }
