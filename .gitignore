@@ -30,3 +30,4 @@
 # Custom
 linuino/venv
 linuino/*.pyc
+arduino/configure.bat
