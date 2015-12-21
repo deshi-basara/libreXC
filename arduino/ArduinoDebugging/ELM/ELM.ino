@@ -10,6 +10,10 @@ void setup() {
   if (debugging) {while (!Serial) {;}}; // wait for serial monitor
   elm.begin(9600); //Serial ELM  
   Bridge.begin(); // make contact with linuino
+  
+  delay(500); // wait for elm to boot (in case of hard reset)
+  elm.println("ATZ"); // reset elm
+  delay(500); // wait for elm to boot
 }
 
 void loop() {
