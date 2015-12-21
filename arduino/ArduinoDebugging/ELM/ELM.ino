@@ -10,11 +10,18 @@ void setup() {
   if (debugging) {while (!Serial) {;}}; // wait for serial monitor
   elm.begin(9600); //Serial ELM  
   Bridge.begin(); // make contact with linuino
+  
+ /* delay(500); // wait for elm to boot (in case of hard reset)
+  elm.println("ATZ"); // reset elm
+  delay(500); // wait for elm to boot
+  elm.println("ATE1");
+  delay(200);*/
 }
 
 void loop() {
   //this is just a test code which asks for temperature every second
-  getPID(0x0D);
+  getPID(0x05);
+  //get_available_pids();
   delay(1000);
 }
 
@@ -46,6 +53,40 @@ String pid(byte id) {
     Serial.println("[Debugging]{pid} AT Command for PID "+String(id)+": "+ret);
   }
   return ret;
+}
+
+void get_available_pids() {
+	
+	String raw_a = AT(pid(0x00)); //retrieve PIDs 0x01 - 0x20
+	
+	//0  3  6  9  12 15
+	//41 00 12 34 56 78
+	
+	raw_a.remove(0,6);
+	//0  3  6  9  12 15
+	//12 34 56 78
+	
+	raw_a.remove(2,1);
+	//0  3  6  9  12 15
+	//1234 56 78
+	
+	raw_a.remove(4,1);
+	//0  3  6  9  12 15
+	//123456 78
+	
+	raw_a.remove(6,1);
+	
+	String raw_a1 = raw_a.substring(0,4);
+	String raw_a2 = raw_a.substring(4,4);
+	
+	unsigned int p1 = raw_a1.toInt();
+	unsigned int p2 = raw_a2.toInt();
+	
+	String ba = String(p1, BIN);
+	ba += String(p2, BIN);
+	
+	if(debugging) Serial.println("[Debugging]{get_available_pids} Received: " +  ba);
+	
 }
 
 /** 
