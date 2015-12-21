@@ -11,14 +11,17 @@ void setup() {
   elm.begin(9600); //Serial ELM  
   Bridge.begin(); // make contact with linuino
   
-  delay(500); // wait for elm to boot (in case of hard reset)
+ /* delay(500); // wait for elm to boot (in case of hard reset)
   elm.println("ATZ"); // reset elm
   delay(500); // wait for elm to boot
+  elm.println("ATE1");
+  delay(200);*/
 }
 
 void loop() {
   //this is just a test code which asks for temperature every second
-  getPID(0x0D);
+  getPID(0x05);
+  //get_available_pids();
   delay(1000);
 }
 
