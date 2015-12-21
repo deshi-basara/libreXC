@@ -7,8 +7,8 @@
 #ifndef ELM_h
 #define ELM_h
 
-#include "Arduino.h"
-#include "SoftwareSerial.h"
+#include <Arduino.h>
+#include <SoftwareSerial.h>
 
 class ELM {
   private:
