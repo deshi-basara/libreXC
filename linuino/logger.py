@@ -1,12 +1,11 @@
 import time
 import datetime
 
-from threading import Thread
 from config import Config
 
 
 class Logger(object):
-    def __init__(self, _postfix, _data_object):
+    def __init__(self, _postfix):
         """
         Generates a new file-name for Logger and writes it as JSON-file to
         the user's file-system.
@@ -19,9 +18,6 @@ class Logger(object):
         except IOError:
             # @todo error handling
             print("Path for logfile does not exist: {0}".format(self.log_path))
-
-        # save data-object for pulling new data
-        self.data = _data_object
 
     def make_stamp(self):
         """

@@ -40,9 +40,9 @@ def main():
         thread.start()
 
     # add observers to data-object
-    # logger = Logger("default", data)
-    # data.add_observer(logger)
-    # data.add_observer(socket_thread)
+    logger = Logger("default")
+    data_thread.add_observer(logger)
+    data_thread.add_observer(socket_thread)
 
     # keep main() alive to prevent an exit of our
     # deamonized threads

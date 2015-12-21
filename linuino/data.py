@@ -2,7 +2,7 @@ import Queue
 import time
 
 from threading import Thread
-from libs.bridgeclient import BridgeClient
+from arduino.bridgeclient import BridgeClient
 from config import Config
 
 
