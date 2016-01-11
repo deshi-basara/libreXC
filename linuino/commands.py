@@ -57,6 +57,11 @@ class Commands(object):
 
     @staticmethod
     def request_cmd(cmd):
+        """
+        Requests the parsing of a command on the arduino side.
+
+        The request is sent via the arduino-bridge-library.
+        """
         bridge = BridgeClient()
 
         cmd = cmd.split(" ")
