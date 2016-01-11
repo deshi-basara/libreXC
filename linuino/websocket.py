@@ -5,6 +5,7 @@ from twisted.internet import reactor
 from autobahn.websocket.http import HttpException
 from security import Security
 from config import Config
+from commands import Commands
 
 
 class LibreSocketEvents(WebSocketServerProtocol):
@@ -46,9 +47,14 @@ class LibreSocketEvents(WebSocketServerProtocol):
             return
 
         received_cmd = payload.decode('utf8')
+        # validate received command
+        isValid = Commands.validate_cmd(received_cmd)
+        if not isValid:
+            self.factory.broadcast('Not a valid command: <key> <param>')
+            return
 
-        # send test broadcast
-        self.factory.broadcast('{"key":"value"}')
+        # hand valid cmd to arduino
+        Commands.request_cmd(received_cmd)
 
     def onClose(self, wasClean, code, reason):
         """
