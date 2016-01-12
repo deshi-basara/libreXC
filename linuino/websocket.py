@@ -54,12 +54,8 @@ class LibreSocketEvents(WebSocketServerProtocol):
             self.factory.broadcast(str(error))
             return
 
-        print(cmd)
-        print(value)
-        return
-
         # hand valid cmd to arduino
-        Commands.request_cmd(received_cmd)
+        Commands.request_cmd(cmd, value)
 
     def onClose(self, wasClean, code, reason):
         """

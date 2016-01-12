@@ -1,4 +1,6 @@
-from arduino.bridgeclient import BridgeClient
+import serial
+
+# from arduino.bridgeclient import BridgeClient
 
 # dictionary of all available requests and their settings
 valid_cmds = {
@@ -73,9 +75,12 @@ class Commands(object):
                 "all available commands.".format(cmd[0])
             raise Exception(errorMsg)
 
-        # key found, check if a parameter is needed
+        # extract byteId and parameter-settings
         cmdParams = valid_cmds[cmd[0]]
+        cmdKey = cmdParams["byteId"]
         cmdValue = None
+
+        # key found, check if a parameter is needed
         if cmdParams["parameter"] is not None:
             # parameter is needed, check type
             try:
@@ -85,24 +90,35 @@ class Commands(object):
                     "'{1}'.".format(cmd[1], cmd[0])
                 raise Exception(errorMsg)
 
-        return (cmd[0], cmdValue)
+        return (cmdKey, cmdValue)
 
     @staticmethod
-    def request_cmd(cmd):
+    def request_cmd(key, value):
         """
         Requests the parsing of a command on the arduino side.
 
-        The request is sent via the arduino-bridge-library.
+        The request is sent via serial-connection to arduino and consists
+        of a custom message protocol.
         """
-        # startByte = int("11", 16)
-        # cmdByte = int()
+        print(key)
+        print(value)
 
-        bridge = BridgeClient()
+        # setup protocol bytes
+        startByte = int("11")
+        cmdByte = int(key)
+        parameterByte = int(value)
+        checkByte = cmdByte ^ parameterByte
+        endByte = int("22")
 
-        cmd = cmd.split(" ")
-        if len(cmd) == 1:
-            # cmd without param was sent
-            bridge.put(cmd[0], False)
-        else:
-            # cmd with param was sent
-            bridge.put(cmd[0], cmd[1])
+        # setup message with bytes
+        message = [
+            startByte, startByte, startByte,
+            cmdByte,
+            parameterByte,
+            checkByte,
+            endByte
+        ]
+        package = "".join(chr(x) for x in message)
+
+        # send package
+        # @todo send package via serial-connection
