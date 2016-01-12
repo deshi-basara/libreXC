@@ -49,13 +49,18 @@ class LibreSocketEvents(WebSocketServerProtocol):
         # validate received command
         try:
             received_cmd = payload.decode('utf8')
-            cmd, value = Commands.validate_cmd(received_cmd)
+            cmd, value, external = Commands.validate_cmd(received_cmd)
         except Exception as error:
             self.factory.broadcast(str(error))
             return
 
-        # hand valid cmd to arduino
-        Commands.request_cmd(cmd, value)
+        if external is True:
+            # hand valid cmd to arduino
+            Commands.request_cmd(cmd, value)
+        else:
+            # hand valid cmd to linuino
+            result = Commands.execute_cmd(cmd, value)
+            self.factory.broadcast(result)
 
     def onClose(self, wasClean, code, reason):
         """

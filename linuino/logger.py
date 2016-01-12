@@ -1,5 +1,6 @@
 import time
 import datetime
+import os
 
 from config import Config
 
@@ -45,3 +46,44 @@ class Logger(object):
         """
         # new_data = self.data.get_new_data()
         self.write_line(json)
+
+    @staticmethod
+    def get_log_list():
+        """
+        Fetches all available log files from the logging-path and returns
+        them with a unique id.
+        """
+        id = 1
+        result = ""
+        for file in os.listdir(Config.get_log_path()):
+            entry = "[{0}] - {1}\n".format(id, file)
+            result += entry
+            id += 1
+
+        return result
+
+    @staticmethod
+    def get_log(id):
+        """
+        Fetches the content of a log-file identified by id and returns it.
+        """
+        # get file from id
+        files = os.listdir(Config.get_log_path())
+        requested_file = (files[id])
+
+        # read file content and return it
+        file_content = open(Config.get_log_path() + requested_file, "r").read()
+        return file_content
+
+    @staticmethod
+    def remove_log(id):
+        """
+        Removes a log-file identified by id from the logging-path.
+        """
+        # get file from id
+        files = os.listdir(Config.get_log_path())
+        remove_file = (files[id])
+
+        # remove file
+        os.remove(Config.get_log_path() + remove_file)
+        return

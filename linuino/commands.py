@@ -1,54 +1,66 @@
-import serial
-
 # from arduino.bridgeclient import BridgeClient
+from logger import Logger
 
 # dictionary of all available requests and their settings
 valid_cmds = {
     # external ardiono cmds
     "reset": {
         "byteId": 1,
-        "parameter": None
+        "parameter": None,
+        "desc": "Resets the OBD2UART connection."
     },
     "available_pids": {
         "byteId": 2,
-        "parameter": int
+        "parameter": None,
+        "desc": "Lists all available OBD-pids."
     },
     "read_all": {
         "byteId": 3,
-        "parameter": None
+        "parameter": None,
+        "desc": "Returns values from each available OBD-pids."
     },
     "read_pid": {
         "byteId": 4,
-        "parameter": int
+        "parameter": int,
+        "desc": "Returns the value of a handed OBD-pid (e.g. 'read_pid 100')."
     },
     "read_car": {
         "byteId": 5,
-        "parameter": None
+        "parameter": None,
+        "desc": "Returns all available car values."
     },
     "read_dtc": {
         "byteId": 6,
-        "parameter": None
+        "parameter": None,
+        "desc": "Returns all buffered error codes."
     },
     "delete_dtc": {
         "byteId": 7,
-        "parameter": None
+        "parameter": None,
+        "desc": "Resets all buffered error codes."
     },
     # internal linuino cmds
     "available_logs": {
         "byteId": -1,
-        "parameter": None
+        "parameter": None,
+        "desc": "Returns a list of all available log-files with their IDs."
     },
     "read_log": {
         "byteId": -1,
-        "parameter": int
+        "parameter": int,
+        "desc": "Returns the content of a log-file identified by its ID " +
+        "(e.g. 'read_log 1')"
     },
     "delete_log": {
         "byteId": -1,
-        "parameter": int
+        "parameter": int,
+        "desc": "Deletes a log-file identified by its ID " +
+        "(e.g. 'delete_log 1')"
     },
     "help": {
         "byteId": -1,
-        "parameter": None
+        "parameter": None,
+        "desc": "Shows this help."
     }
 }
 
@@ -65,7 +77,10 @@ class Commands(object):
         Validates if sent data requests are valid by checking them
         against our valid_cmds-list.
 
-        Returns true, if data request is valid.
+        Returns
+            cmdKey: Integer identifier of cmd
+            cmdValue: cmd parameter, if no parameter is needed 'None'
+            cmdExtern: True, command should be sent to arduino
         """
         cmd = cmd.split(" ")
 
@@ -90,7 +105,46 @@ class Commands(object):
                     "'{1}'.".format(cmd[1], cmd[0])
                 raise Exception(errorMsg)
 
-        return (cmdKey, cmdValue)
+        # is the cmd for arduino or should it be executed on linuino (for
+        # example when a log is returned)
+        cmdArduino = True
+        if(cmdKey == -1):
+            # internal cmd was found
+            cmdKey = cmd[0]
+            cmdArduino = False
+
+        return (cmdKey, cmdValue, cmdArduino)
+
+    @staticmethod
+    def execute_cmd(key, value):
+        """
+        Executes a handed command on the linuino side.
+        """
+        if key == "available_logs":
+            logs = Logger.get_log_list()
+
+            result = "All available logs with their ids:\n\n" + logs
+            return result
+        elif key == "read_log":
+            log = Logger.get_log(value)
+
+            result = "\n" + log
+            return result
+        elif key == "delete_log":
+            Logger.remove_log(value)
+
+            result = "Logfile was removed successfully."
+        elif key == "help":
+            result = "All available commands:\n\n"
+
+            for cmd in valid_cmds:
+                help_line = "{command} - {description}\n".format(
+                    command=cmd,
+                    description=valid_cmds[cmd]["desc"]
+                )
+                result += help_line
+
+            return result
 
     @staticmethod
     def request_cmd(key, value):
@@ -104,19 +158,19 @@ class Commands(object):
         print(value)
 
         # setup protocol bytes
-        startByte = int("11")
-        cmdByte = int(key)
-        parameterByte = int(value)
-        checkByte = cmdByte ^ parameterByte
-        endByte = int("22")
+        start_byte = int("11")
+        cmd_byte = int(key)
+        parameter_byte = int(value)
+        check_byte = cmd_byte ^ parameter_byte
+        end_byte = int("22")
 
         # setup message with bytes
         message = [
-            startByte, startByte, startByte,
-            cmdByte,
-            parameterByte,
-            checkByte,
-            endByte
+            start_byte, start_byte, start_byte,
+            cmd_byte,
+            parameter_byte,
+            check_byte,
+            endByte, end_byte, end_byte
         ]
         package = "".join(chr(x) for x in message)
 
