@@ -1,26 +1,54 @@
 from arduino.bridgeclient import BridgeClient
 
-# list of all available requests
-valid_cmds = [
-    "available_pids",
-    "available_logs",
-
-    "read_all",
-    "read_car",
-    "read_dtc",
-
-    "delete_dtc",
-    "delete_log",
-
-    "reset",
-    "help"
-]
-
-# list of all available requests that accept additional parameters
-valid_cmds_with_parameter = [
-    "read_pid",
-    "read_log"
-]
+# dictionary of all available requests and their settings
+valid_cmds = {
+    # external ardiono cmds
+    "reset": {
+        "byteId": 1,
+        "parameter": None
+    },
+    "available_pids": {
+        "byteId": 2,
+        "parameter": int
+    },
+    "read_all": {
+        "byteId": 3,
+        "parameter": None
+    },
+    "read_pid": {
+        "byteId": 4,
+        "parameter": int
+    },
+    "read_car": {
+        "byteId": 5,
+        "parameter": None
+    },
+    "read_dtc": {
+        "byteId": 6,
+        "parameter": None
+    },
+    "delete_dtc": {
+        "byteId": 7,
+        "parameter": None
+    },
+    # internal linuino cmds
+    "available_logs": {
+        "byteId": -1,
+        "parameter": None
+    },
+    "read_log": {
+        "byteId": -1,
+        "parameter": int
+    },
+    "delete_log": {
+        "byteId": -1,
+        "parameter": int
+    },
+    "help": {
+        "byteId": -1,
+        "parameter": None
+    }
+}
 
 
 class Commands(object):
@@ -39,21 +67,25 @@ class Commands(object):
         """
         cmd = cmd.split(" ")
 
-        if len(cmd) == 1:
-            # cmd without param was sent
-            cmd_key = cmd[0]
-            cmd_value = False
-        else:
-            # cmd with param was sent
-            cmd_key = cmd[0]
-            cmd_value = cmd[1]
+        # did the user send a valid cmd?
+        if cmd[0] not in valid_cmds.keys():
+            errorMsg = "Error: '{0}' is not a valid command, enter 'help' for " \
+                "all available commands.".format(cmd[0])
+            raise Exception(errorMsg)
 
-        if cmd_value is False:
-            # no value specified, check regular cmd-list
-            return (cmd_key in valid_cmds)
-        else:
-            # value specified, check cmd-list with parameters
-            return (cmd_key in valid_cmds_with_parameter)
+        # key found, check if a parameter is needed
+        cmdParams = valid_cmds[cmd[0]]
+        cmdValue = None
+        if cmdParams["parameter"] is not None:
+            # parameter is needed, check type
+            try:
+                cmdValue = cmdParams["parameter"](cmd[1])
+            except Exception:
+                errorMsg = "Error: '{0}' is not a valid parameter for command " \
+                    "'{1}'.".format(cmd[1], cmd[0])
+                raise Exception(errorMsg)
+
+        return (cmd[0], cmdValue)
 
     @staticmethod
     def request_cmd(cmd):
@@ -62,6 +94,9 @@ class Commands(object):
 
         The request is sent via the arduino-bridge-library.
         """
+        # startByte = int("11", 16)
+        # cmdByte = int()
+
         bridge = BridgeClient()
 
         cmd = cmd.split(" ")

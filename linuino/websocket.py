@@ -46,12 +46,17 @@ class LibreSocketEvents(WebSocketServerProtocol):
             print("Binary message received: {0} bytes".format(len(payload)))
             return
 
-        received_cmd = payload.decode('utf8')
         # validate received command
-        isValid = Commands.validate_cmd(received_cmd)
-        if not isValid:
-            self.factory.broadcast('Not a valid command: <key> <param>')
+        try:
+            received_cmd = payload.decode('utf8')
+            cmd, value = Commands.validate_cmd(received_cmd)
+        except Exception as error:
+            self.factory.broadcast(str(error))
             return
+
+        print(cmd)
+        print(value)
+        return
 
         # hand valid cmd to arduino
         Commands.request_cmd(received_cmd)
