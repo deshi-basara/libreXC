@@ -2,38 +2,58 @@
 #include <SoftwareSerial.h>
 #include <elm.h>
 
-boolean debugging = true; //debugging global on/off
+#define PACK_LEN    2
+#define byte        uint8_t
+
+byte buff[PACK_LEN];
+byte lastCmd;
+
 ELM elm(9,10);
 
 void setup() {
-  Serial.begin(9600); //(Debugging) Serial USB
-  if (debugging) {while (!Serial) {;}}; // wait for serial monitor
-  
   elm.begin(9600); //Serial ELM  
   Bridge.begin(); // make contact with linuino
-  
-  delay(1000);
-  Serial.println("Hello Car!"); //DEBUG
-  
-  elm.get_available_pids();
-  Serial.println(""); //DEBUG
 }
 
 void loop() {
-  
-  
-  delay(1000);
-  elm.get_pid(0x05);
-  
-  
-  
+  Bridge.get("cmd",buff,PACK_LEN);
+  switch (buff[0]) {
+    case 0x01: reset(); break;
+    case 0x02: available_pids(); break;
+    case 0x03: read_all(); break;
+    case 0x04: read_pid(buff[1]); break;
+    case 0x05: read_car(); break;
+    case 0x06: read_dct(); break;
+    case 0x07: delete_dct(); break;
+    default: delay(10);
+  }
 }
 
-void all_data() {
-	
-	// list of supported_pids
-	
-	// conversion
-	
-	//Bridge.put("Data", data);
-}	
+void reset() {
+
+}
+
+void available_pids() {
+
+}
+
+void read_all() {
+
+}
+
+void read_pid(int pid) {
+
+}
+
+void read_car() {
+
+}
+
+void read_dct() {
+
+}
+
+void delete_dct() {
+
+}
+
