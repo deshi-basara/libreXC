@@ -299,31 +299,206 @@ void ELM::parsePID(byte pid, String raw_data, String *value, String *unit, Strin
       *unit="°C";
       *desc="Engine coolant temperature";
       break;
-    case 0x06 || 0x07 || 0x08 || 0x09: //Short term fuel % trim
-      *value=String((data[0]-128)*100/128);
+	#define CALC_STFT \
+      *value=String((data[0]-128.0)*100.0/128.0); \
       *unit="%";
     case 0x06:
-      *desc="Long term fuel % trim - Bank 1";
-      break;
+		CALC_STFT
+		*desc="Long term fuel % trim - Bank 1";
+		break;
     case 0x07:
-      *desc="Long term fuel % trim - Bank 1";
-      break;
+		CALC_STFT
+		*desc="Long term fuel % trim - Bank 1";
+		break;
     case 0x08:
-      *desc="Long term fuel % trim - Bank 2";
-      break;
+		CALC_STFT
+		*desc="Long term fuel % trim - Bank 2";
+		break;
     case 0x09:
-      *desc="Long term fuel % trim - Bank 2";
-      break;
+		CALC_STFT
+		*desc="Long term fuel % trim - Bank 2";
+		break;
     case 0x0A:
-      *value=String(data[0]*3);
-      *unit="kPa";
-      *desc="Fuel pressure";
-      break;
+		*value=String(data[0]*3);
+		*unit="kPa";
+		*desc="Fuel pressure";
+		break;
     case 0x0B:
-      *value=String(data[0]);
-      *unit="kPa";
-      *desc="Intake manifold absolute pressure";
-      break;
+		*value=String(data[0]);
+		*unit="kPa";
+		*desc="Intake manifold absolute pressure";
+		break;
+	case 0x0C:
+		*value=String(((data[0]*256.0)+data[1])/4.0);
+		*unit="rpm";
+		*desc=F("Engine RPM");
+		break;
+	case 0x0D:
+	  *value=String(data[0]);
+	  *unit="km/h";
+	  *desc=F("Vehicle speed");
+	  break;
+	case 0x0E:
+	  *value=String((data[0]-128.0)/2.0);
+	  *unit="deg";
+	  *desc=F("Timing advance");
+	  break;
+	case 0x0F:
+	  *value=String(data[0]-40);
+	  *unit="°C";
+	  *desc=F("Intake air temperature");
+	  break;
+	case 0x10:
+	  *value=String( ((data[0]*256.0) + data[1])/100.0 );
+	  *unit="g/s";
+	  *desc=F("MAF air flow rate");
+	  break;
+	case 0x11:
+	  *value=String( data[0]*100.0 / 256.0 );
+	  *unit="%";
+	  *desc=F("Throtle position");
+	  break;
+	case 0x12:
+	  *value=String(data[0]); //BIT ENCODED TODO: DECODE
+	  *unit="";
+	  *desc=F("Commanded secondary air status");
+	  break;
+	case 0x13:
+		*value=String(data[0]); //BIT ENCODED TODO: DECODE
+		*unit="";
+		*desc=F("Oxygen sensors present");
+	  break;
+	 #define CALC_OS_VAL \
+	  *value=String( (data[0] / 200.0)  ) + "," + String( (data[1] - 128.0) * 100.0 / 128.0 ); \
+	  *unit="V, %";
+	case 0x14:
+		*desc=F("Bank 1, Sensor1: Oxygen sensor voltage, Short term fuel trim");
+		CALC_OS_VAL
+		break;
+	case 0x15:
+		*desc=F("Bank 1, Sensor2: Oxygen sensor voltage, Short term fuel trim");	  
+		CALC_OS_VAL
+		break;
+	case 0x16:
+		*desc=F("Bank 1, Sensor3: Oxygen sensor voltage, Short term fuel trim");
+		CALC_OS_VAL
+		break;
+	case 0x17:
+		*desc=F("Bank 1, Sensor4: Oxygen sensor voltage, Short term fuel trim");
+		CALC_OS_VAL
+		break;
+	case 0x18:
+		*desc=F("Bank 2, Sensor1: Oxygen sensor voltage, Short term fuel trim");
+		CALC_OS_VAL
+		break;
+	case 0x19:
+		*desc=F("Bank 2, Sensor2: Oxygen sensor voltage, Short term fuel trim");
+		CALC_OS_VAL
+		break;
+	case 0x1A:
+		*desc=F("Bank 2, Sensor3: Oxygen sensor voltage, Short term fuel trim");
+		CALC_OS_VAL
+		break;
+	case 0x1B:
+		*desc=F("Bank 2, Sensor4: Oxygen sensor voltage, Short term fuel trim");
+		CALC_OS_VAL
+		break;
+
+	case 0x1C:
+		*value=String(data[0]); // BIT ENCODED TODO: DECODE
+		*unit="";
+		*desc=F("OBD standards this vehicle conforms to");
+		break;
+	case 0x1D:
+		*value=String(data[0]); // BIT ENCODED TODO: DECODE
+		*unit="";
+		*desc=F("Oxygen sensors present");
+		break;
+	case 0x1E:
+	  if(data[0] == 1) {
+		*value=String(F("PTO active"));
+	  } else {
+		*value=String(F("PTO inactive"));
+	  }
+	  *unit="";
+	  *desc=F("Auxillary input status");
+	  break;  
+	case 0x1F:
+	  *value=String((data[0]*256) + data[1]);
+	  *unit="s";
+	  *desc=F("Run time since engine start");
+	  break;  
+	case 0x21:
+	  *value=String((data[0]*256) + data[1]);
+	  *unit="km";
+	  *desc=F("Distance traveled with MIL on");
+	  break;  
+	case 0x22:
+	  *value=String(( (data[0]*256.0) + data[1] ) * 0.079);
+	  *unit="kPa";
+	  *desc=F("Fuel rail pressure relative to manifold vacuum");
+	  break;  
+	case 0x23:
+	  *value=String( ( (data[0]*256) + data[1] ) * 10);
+	  *unit="kPa";
+	  *desc=F("Fuel rail pressure");
+	  break;  
+	#define CALC_O2S \
+	  *value = String ( ((data[0]*256.0) + data[1]) * 2.0 / 65535.0 ) + ", " + String( ((data[2]*256.0) + data[3]) * 8.0 / 65535.0 ) ; \
+	  *unit = "n/a , V"; 
+	case 0x24:
+		CALC_O2S
+		*desc=F("O2S1_WR_lambda(1): Equivalence ratio, Voltage");
+		break;
+	case 0x25:
+		CALC_O2S
+		*desc=F("O2S2_WR_lambda(1): Equivalence ratio, Voltage");
+		break;
+	case 0x26:
+		CALC_O2S
+		*desc=F("O2S3_WR_lambda(1): Equivalence ratio, Voltage");
+		break;
+	case 0x27:
+		CALC_O2S
+		*desc=F("O2S4_WR_lambda(1): Equivalence ratio, Voltage");
+		break;
+	case 0x28:
+		CALC_O2S
+		*desc=F("O2S5_WR_lambda(1): Equivalence ratio, Voltage");
+		break;
+	case 0x29:
+		CALC_O2S
+		*desc=F("O2S6_WR_lambda(1): Equivalence ratio, Voltage");
+		break;
+	case 0x2A:
+		CALC_O2S
+		*desc=F("O2S7_WR_lambda(1): Equivalence ratio, Voltage");
+		break;
+	case 0x2B:
+		CALC_O2S
+		*desc=F("O2S8_WR_lambda(1): Equivalence ratio, Voltage");
+		break;
+	
+	case 0x2C:
+	  *value=String(data[0]*100.0 / 255.0);
+	  *unit="%";
+	  *desc=F("Commanded EGR");
+	  break;  
+	case 0x2D:
+	  *value=String((data[0]-128.0) * 100.0 / 255.0);
+	  *unit="%";
+	  *desc=F("EGR Error");
+	  break;
+	case 0x2E:
+	  *value=String(data[0] * 100.0 / 255.0);
+	  *unit="%";
+	  *desc=F("Commanded evaporative purge");
+	  break;  
+	case 0x2F:
+	  *value=String(data[0] * 100.0 / 255.0);
+	  *unit="%";
+	  *desc=F("Fuel level input");
+	  break;    	  
     // usw.
   }
 }
