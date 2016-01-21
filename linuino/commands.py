@@ -1,4 +1,5 @@
-# from arduino.bridgeclient import BridgeClient
+import serial
+
 from logger import Logger
 
 # dictionary of all available requests and their settings
@@ -93,10 +94,10 @@ class Commands(object):
         # extract byteId and parameter-settings
         cmdParams = valid_cmds[cmd[0]]
         cmdKey = cmdParams["byteId"]
-        cmdValue = None
+        cmdValue = -1
 
         # key found, check if a parameter is needed
-        if cmdParams["parameter"] is not None:
+        if cmdParams["parameter"] == -1:
             # parameter is needed, check type
             try:
                 cmdValue = cmdParams["parameter"](cmd[1])
@@ -147,22 +148,19 @@ class Commands(object):
             return result
 
     @staticmethod
-    def request_cmd(key, value):
+    def request_cmd(byteId, value):
         """
         Requests the parsing of a command on the arduino side.
 
-        The request is sent via serial-connection to arduino and consists
-        of a custom message protocol.
+        The request is sent via serial-connection to arduino with a
+        custom message protocol.
         """
-        print(key)
-        print(value)
-
         # setup protocol bytes
-        start_byte = int("11")
-        cmd_byte = int(key)
-        parameter_byte = int(value)
+        start_byte = int("11", 16)
+        cmd_byte = int(str(byteId), 16)
+        parameter_byte = int(str(value), 16)
         check_byte = cmd_byte ^ parameter_byte
-        end_byte = int("22")
+        end_byte = int("22", 16)
 
         # setup message with bytes
         message = [
@@ -170,9 +168,17 @@ class Commands(object):
             cmd_byte,
             parameter_byte,
             check_byte,
-            endByte, end_byte, end_byte
+            end_byte, end_byte, end_byte
         ]
-        package = "".join(chr(x) for x in message)
+        package = ""
+        for x in message:
+            package += chr(x)
+        print(package)
 
         # send package
-        # @todo send package via serial-connection
+        try:
+            tty = serial.Serial(port=0, baudrate=57600)
+            tty.write(package)
+            print("Request Command wrote to Serial: {0}".format(package))
+        except Exception as e:
+            print("Request Command serial Exception: {0}".format(e))
