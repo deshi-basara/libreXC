@@ -282,21 +282,33 @@ String ELM::AT(String Cmd)
  */
 void ELM::parsePID(byte pid, String raw_data, String *value, String *unit, String *desc, byte data_length) {
 	
-	byte data[4];
+	byte data[13];
 	
 	for(int n = 0; n < data_length; n++){
 		data[n] = res2byte(raw_data, n);	
 	}
 	
+	#define A data[0]
+	#define B data[1]
+	#define C data[2]
+	#define D data[3]
+	#define E data[4]
+	
+	#define CALC_PERCENT \
+		*value=String(data[0]*100.0/255.0); \
+		*unit="%";
+		
+	#define CALC_TEMP \
+		*value=String(data[0]-40.0); \
+		*unit="°C";
+	
   switch (pid) {
     case 0x04: //Calculated engine load value
-      *value=String(data[0]*100/255);
-      *unit="%";
+      CALC_PERCENT
       *desc="Calculated engine load value";
       break;
     case 0x05: //Engine coolant temperature
-      *value=String(data[0]-40);
-      *unit="°C";
+      CALC_TEMP
       *desc="Engine coolant temperature";
       break;
 	#define CALC_STFT \
@@ -354,8 +366,7 @@ void ELM::parsePID(byte pid, String raw_data, String *value, String *unit, Strin
 	  *desc=F("MAF air flow rate");
 	  break;
 	case 0x11:
-	  *value=String( data[0]*100.0 / 256.0 );
-	  *unit="%";
+	  CALC_PERCENT
 	  *desc=F("Throtle position");
 	  break;
 	case 0x12:
@@ -498,7 +509,380 @@ void ELM::parsePID(byte pid, String raw_data, String *value, String *unit, Strin
 	  *value=String(data[0] * 100.0 / 255.0);
 	  *unit="%";
 	  *desc=F("Fuel level input");
-	  break;    	  
+	  break;    	
+	case 0x30:
+		*value=String(data[0]);
+		*unit="";
+		*desc=F("");
+		break;
+	case 0x31:
+		*value=String(data[0]);
+		*unit="";
+		*desc=F("");
+		break;
+	case 0x32:
+		*value=String(data[0]);
+		*unit="";
+		*desc=F("");
+		break;
+	case 0x33:
+		*value=String(data[0]);
+		*unit="";
+		*desc=F("");
+		break;
+	#define CALC_O2SB \
+	  *value = String ( ((data[0]*256.0) + data[1]) * 2.0 / 65535.0 ) + ", " + String( (((data[2]*256.0) + data[3]) / 256.0) - 128.0 ) ; \
+	  *unit = "n/a , mA"; 	
+	case 0x34:
+		CALC_O2SB
+		*desc=F("O2S1_WR_lambda(1): Equivalence ratio, Current");
+		break;
+	case 0x35:
+		CALC_O2SB
+		*desc=F("O2S2_WR_lambda(1): Equivalence ratio, Current");
+		break;
+	case 0x36:
+		CALC_O2SB
+		*desc=F("O2S3_WR_lambda(1): Equivalence ratio, Current");
+		break;
+	case 0x37:
+		CALC_O2SB
+		*desc=F("O2S4_WR_lambda(1): Equivalence ratio, Current");
+		break;
+	case 0x38:
+		CALC_O2SB
+		*desc=F("O2S5_WR_lambda(1): Equivalence ratio, Current");
+		break;
+	case 0x39:
+		CALC_O2SB
+		*desc=F("O2S6_WR_lambda(1): Equivalence ratio, Current");
+		break;
+	case 0x3A:
+		CALC_O2SB
+		*desc=F("O2S7_WR_lambda(1): Equivalence ratio, Current");
+		break;
+	case 0x3B:
+		CALC_O2SB
+		*desc=F("O2S8_WR_lambda(1): Equivalence ratio, Current");
+		break;
+	#define CALC_CAT_TEMP \
+	  *value = String ( (((data[0]*256)+data[1])/10) - 40 ); \
+	  *unit = "°C"; 		
+	case 0x3C:
+		CALC_CAT_TEMP
+		*desc=F("Catalyst Temperature Bank 1, Sensor 1");
+		break;
+	case 0x3D:
+		CALC_CAT_TEMP
+		*desc=F("Catalyst Temperature Bank 2, Sensor 1");
+		break;
+	case 0x3E:
+		CALC_CAT_TEMP
+		*desc=F("Catalyst Temperature Bank 1, Sensor 2");
+		break;
+	case 0x3F:
+		CALC_CAT_TEMP
+		*desc=F("Catalyst Temperature Bank 2, Sensor 2");
+		break;
+	case 0x41:
+		*value=String(data[0]); // BIT ENCODED
+		*unit="";
+		*desc=F("Monitor status this drive cycle");
+		break;
+	case 0x42:
+		*value=String(((A*256.0)+B)/1000.0);
+		*unit="V";
+		*desc=F("Control module voltage");
+		break;
+	case 0x43:
+		*value=String(((A*256.0)+B)*100.0/255.0);
+		*unit="%";
+		*desc=F("Absolute load value");
+		break;
+	case 0x44:
+		*value=String(((A*256.0)+B)/32768.0);
+		*unit="";
+		*desc=F("Fuel/Air commanded equivalence ratio");
+		break;
+	case 0x45:
+		CALC_PERCENT
+		*desc=F("Relative throttle position");
+		break;
+	case 0x46:
+		*value=String(A-40.0);
+		*unit="°C";
+		*desc=F("Ambient air temperature");
+		break;
+	case 0x47:
+		CALC_PERCENT
+		*desc=F("Absolute throttle position B");
+		break;
+	case 0x48:
+		CALC_PERCENT
+		*desc=F("Absolute throttle position C");
+		break;
+	case 0x49:
+		CALC_PERCENT
+		*desc=F("Accelerator pedal position D");
+		break;
+	case 0x4A:
+		CALC_PERCENT
+		*desc=F("Accelerator pedal position E");
+		break;
+	case 0x4B:
+		CALC_PERCENT
+		*desc=F("Accelerator pedal position F");
+		break;
+	case 0x4C:
+		CALC_PERCENT
+		*desc=F("Commanded throttle actuator");
+		break;
+	case 0x4D:
+		*value=String((A*256.0)+B);
+		*unit="min";
+		*desc=F("Time run with MIL on");
+		break;
+	case 0x4E:
+		*value=String((A*256.0)+B);
+		*unit="min";
+		*desc=F("Time since trouble codes cleared");
+		break;
+	case 0x4F:
+		*value=String(A) + ", " + String(B) + ", " + String(C) + ", " + String(D*10.0);
+		*unit="n/a, V, mA, kPa";
+		*desc=F("Maximum value for equivalence ratio, oxygen sensor voltage, oxygen sensor current, and intake manifold absolute pressure");
+		break;	
+	case 0x50:
+		*value=String(A*10) + ", " + String(B) + ", " + String(C) + ", " + String(D);
+		*unit="g/s";
+		*desc=F("Maximum value for air flow rate from mass air flow sensor");
+		break;	
+	case 0x51:
+		*value=String(data[0]); // INT ENCODED
+		*unit="";
+		*desc=F("Fuel Type");
+		break;	
+	case 0x52:
+		CALC_PERCENT
+		*desc=F("Ethanol fuel %	");
+		break;	
+	case 0x53:
+		*value=String(((A*256.0)+B)/200.0);
+		*unit="kPa";
+		*desc=F("Absolute Evap system Vapor Pressure");
+		break;	
+	case 0x54:
+		*value=String(((A*256.0)+B)-32767.0);
+		*unit="";
+		*desc=F("Evap system vapor pressure	");
+		break;	
+		#define CALC_STSOS \
+		*value=String((A-128.0)*100.0/128.0) + ", " + String(String((B-128.0)*100.0/128.0)); \
+		*unit="%, %";
+	case 0x55:
+		CALC_STSOS
+		*desc=F("Short term secondary oxygen sensor trim bank 1 and bank 3");
+		break;	
+	case 0x56:
+		CALC_STSOS
+		*desc=F("Long term secondary oxygen sensor trim bank 1 and bank 3");
+		break;	
+	case 0x57:
+		CALC_STSOS
+		*desc=F("Short term secondary oxygen sensor trim bank 2 and bank 4");
+		break;	
+	case 0x58:
+		CALC_STSOS
+		*desc=F("Long term secondary oxygen sensor trim bank 2 and bank 4");
+		break;
+	case 0x59:
+		*value=String(((A*256.0)+B) * 10.0);
+		*unit="kPa";
+		*desc=F("Fuel rail pressure (absolute)");
+		break;
+	case 0x5A:
+		CALC_PERCENT
+		*desc=F("Relative accelerator pedal position");
+		break;
+	case 0x5B:
+		CALC_PERCENT
+		*desc=F("Hybrid battery pack remaining life	");
+		break;
+	case 0x5C:
+		CALC_TEMP
+		*desc=F("Engine oil temperature");
+		break;
+	case 0x5D:
+		*value=String((((A*256.0)+B)-26880.0)/128.0);
+		*unit="°";
+		*desc=F("Fuel injection timing");
+		break;
+	case 0x5E:
+		*value=String(((A*256.0)+B)*0.05);
+		*unit="L/h";
+		*desc=F("Engine fuel rate	");
+		break;
+	case 0x5F:
+		*value=String(A); // bit encoded
+		*unit="";
+		*desc=F("Emission requirements to which vehicle is designed");
+		break;
+	#define CALC_MOD_PERCENT \
+		*value=String(data[0] - 125); \
+		*unit="%";
+	case 0x61:
+		CALC_MOD_PERCENT
+		*desc=F("Driver's demand engine - percent torque");
+		break;
+	case 0x62:
+		CALC_MOD_PERCENT
+		*desc=F("Actual engine - percent torque");
+		break;
+	case 0x63:
+		*value=String(A*256.0+B);
+		*unit="";
+		*desc=F("Engine reference torque");
+		break;
+	case 0x64:
+		*value=String(A-125) + ", " + String(B-125) + ", " + String(C-125) + ", " + String(D-125) + ", " + String(E-125);
+		*unit="%";
+		*desc=F("Engine percent torque data - IDLE, Engine Point 1, EP2, EP3, EP4");
+		break;	
+	case 0x65:
+		*value=String(); // BIT ENCODED
+		*unit="";
+		*desc=F("Auxiliary input / output supported	");
+		break;	
+	case 0x66:
+		*value=String(A) + ", " + String(B) + ", " + String(C) + ", " + String(D) + ", " + String(E); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Mass air flow sensor");
+		break;	
+	case 0x67:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Engine coolant temperature");
+		break;	
+	case 0x68:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Intake air temperature sensor");
+		break;	
+	case 0x69:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Commanded EGR and EGR Error");
+		break;	
+	case 0x6A:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Commanded Diesel intake air flow control and relative intake air flow position");
+		break;	
+	case 0x6B:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Exhaust gas recirculation temperature");
+		break;	
+	case 0x6C:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Commanded throttle actuator control and relative throttle position");
+		break;	
+	case 0x6D:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Fuel pressure control system");
+		break;	
+	case 0x6E:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Injection pressure control system");
+		break;	
+	case 0x6F:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Turbocharger compressor inlet pressure");
+		break;	
+	case 0x70:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Boost pressure control");
+		break;
+	case 0x71:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Variable Geometry turbo (VGT) control");
+		break;
+	case 0x72:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Wastegate control");
+		break;
+	case 0x73:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Exhaust pressure");
+		break;
+	case 0x74:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Turbocharger RPM");
+		break;
+	case 0x75:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Turbocharger temperature");
+		break;
+	case 0x76:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Turbocharger temperature");
+		break;
+	case 0x77:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Charge air cooler temperature (CACT)");
+		break;
+	case 0x78:
+		*value=String(); // special pid
+		*unit="";
+		*desc=F("Exhaust Gas temperature (EGT) Bank 1");
+		break;
+	case 0x79:
+		*value=String(); // special pid
+		*unit="";
+		*desc=F("Exhaust Gas temperature (EGT) Bank 2");
+		break;
+	case 0x7A:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Diesel particulate filter (DPF)");
+		break;
+	case 0x7B:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Diesel particulate filter (DPF)");
+		break;
+	case 0x7C:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Diesel Particulate filter (DPF) temperature");
+		break;
+	case 0x7D:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("NOx NTE control area status");
+		break;
+	case 0x7E:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("PM NTE control area status	");
+		break;
+	case 0x7F:
+		*value=String(); // NO FORMULA AVAILABLE YET
+		*unit="";
+		*desc=F("Engine run time");
+		break;	
     // usw.
   }
 }
