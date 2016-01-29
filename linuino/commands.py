@@ -97,7 +97,7 @@ class Commands(object):
         cmdValue = -1
 
         # key found, check if a parameter is needed
-        if cmdParams["parameter"] == -1:
+        if cmdParams["parameter"] is not None:
             # parameter is needed, check type
             try:
                 cmdValue = cmdParams["parameter"](cmd[1])
@@ -156,11 +156,14 @@ class Commands(object):
         custom message protocol.
         """
         # setup protocol bytes
-        start_byte = int("11", 16)
-        cmd_byte = int(str(byteId), 16)
-        parameter_byte = int(str(value), 16)
+        start_byte = 0x11
+        cmd_byte = byteId
+        if value == -1:
+            parameter_byte = 255  # 255 = no parameter
+        else:
+            parameter_byte = value
         check_byte = cmd_byte ^ parameter_byte
-        end_byte = int("22", 16)
+        end_byte = 0x22
 
         # setup message with bytes
         message = [
@@ -170,15 +173,11 @@ class Commands(object):
             check_byte,
             end_byte, end_byte, end_byte
         ]
-        package = ""
-        for x in message:
-            package += chr(x)
-        print(package)
 
         # send package
         try:
-            tty = serial.Serial(port=0, baudrate=57600)
-            tty.write(package)
-            print("Request Command wrote to Serial: {0}".format(package))
+            tty = serial.Serial(port='/dev/ttyATH0', baudrate=57600)
+            tty.write(message)
+            print("Request Command wrote to Serial: {0}".format(message))
         except Exception as e:
             print("Request Command serial Exception: {0}".format(e))
