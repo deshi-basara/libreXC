@@ -228,6 +228,24 @@ void ELM::reset() {
 }	
 
 /*
+ * Clear stored trouble codes 
+ * 
+ */
+void ELM::clearDTC() {
+
+	AT("04");
+}
+
+/*
+ * Read stored trouble codes
+ *  
+ */
+void ELM::readDTC() {
+	
+	Serial.println(AT("03"));
+}
+
+/*
  * ELM327 AT command and response handler
  *
  */
@@ -301,44 +319,96 @@ void ELM::parsePID(byte pid, String raw_data, String *value, String *unit, Strin
 	#define CALC_TEMP \
 		*value=String(data[0]-40.0); \
 		*unit="°C";
+		
+	// Helper Variables
+	String value_three_tmp;
+	String temp1C;	
 	
   switch (pid) {
+	case 0x03: // Fuel system status (BIT ENCODED)
+		
+		switch(A) { // Fuel system #1
+			case 1:
+				value_three_tmp=String(F("Open loop due to insufficient engine temperature"));
+				break;
+			case 2:
+				value_three_tmp=String(F("Closed loop, using oxygen sensor feedback to determine fuel mix"));
+				break;
+			case 4:
+				value_three_tmp=String(F("Open loop due to engine load OR fuel cut due to deceleration"));
+				break;
+			case 8:
+				value_three_tmp=String(F("Open loop due to system failure"));
+				break;
+			case 16:
+				value_three_tmp=String(F("Closed loop, using at least one oxygen sensor but there is a fault in the feedback system"));
+				break;
+			default:
+				value_three_tmp=String(F("ERROR - INVALID VALUE"));
+				break;
+		}
+		switch (B) { // Fuel system #2 (if present)
+			case 0:
+				break;
+			case 1:
+				value_three_tmp = "Fuel System 1: " + value_three_tmp + String(F(", Fuel System 2: Open loop due to insufficient engine temperature"));
+				break;
+			case 2:
+				value_three_tmp = "Fuel System 1: " + value_three_tmp + String(F(", Fuel System 2: Closed loop, using oxygen sensor feedback to determine fuel mix"));
+				break;
+			case 4:
+				value_three_tmp = "Fuel System 1: " + value_three_tmp + String(F(", Fuel System 2: Open loop due to engine load OR fuel cut due to deceleration"));
+				break;
+			case 8:
+				value_three_tmp = "Fuel System 1: " + value_three_tmp + String(F(", Fuel System 2: Open loop due to system failure"));
+				break;
+			case 16:
+				value_three_tmp = "Fuel System 1: " + value_three_tmp + String(F(", Fuel System 2: Closed loop, using at least one oxygen sensor but there is a fault in the feedback system"));
+				break;
+			default:
+				value_three_tmp = "Fuel System 1: " + value_three_tmp + String(F(", Fuel System 2: ERROR - INVALID VALUE"));
+				break;	
+		}	
+		*value = value_three_tmp;
+		*unit = "";
+		*desc = F("Fuel system status");
+		break;
     case 0x04: //Calculated engine load value
       CALC_PERCENT
-      *desc="Calculated engine load value";
+      *desc=F("Calculated engine load value");
       break;
     case 0x05: //Engine coolant temperature
       CALC_TEMP
-      *desc="Engine coolant temperature";
+      *desc=F("Engine coolant temperature");
       break;
 	#define CALC_STFT \
       *value=String((data[0]-128.0)*100.0/128.0); \
       *unit="%";
     case 0x06:
 		CALC_STFT
-		*desc="Long term fuel % trim - Bank 1";
+		*desc=F("Long term fuel % trim - Bank 1");
 		break;
     case 0x07:
 		CALC_STFT
-		*desc="Long term fuel % trim - Bank 1";
+		*desc=F("Long term fuel % trim - Bank 1");
 		break;
     case 0x08:
 		CALC_STFT
-		*desc="Long term fuel % trim - Bank 2";
+		*desc=F("Long term fuel % trim - Bank 2");
 		break;
     case 0x09:
 		CALC_STFT
-		*desc="Long term fuel % trim - Bank 2";
+		*desc=F("Long term fuel % trim - Bank 2");
 		break;
     case 0x0A:
 		*value=String(data[0]*3);
 		*unit="kPa";
-		*desc="Fuel pressure";
+		*desc=F("Fuel pressure");
 		break;
     case 0x0B:
 		*value=String(data[0]);
 		*unit="kPa";
-		*desc="Intake manifold absolute pressure";
+		*desc=F("Intake manifold absolute pressure");
 		break;
 	case 0x0C:
 		*value=String(((data[0]*256.0)+data[1])/4.0);
@@ -356,8 +426,7 @@ void ELM::parsePID(byte pid, String raw_data, String *value, String *unit, Strin
 	  *desc=F("Timing advance");
 	  break;
 	case 0x0F:
-	  *value=String(data[0]-40);
-	  *unit="°C";
+	  CALC_TEMP
 	  *desc=F("Intake air temperature");
 	  break;
 	case 0x10:
@@ -370,7 +439,24 @@ void ELM::parsePID(byte pid, String raw_data, String *value, String *unit, Strin
 	  *desc=F("Throtle position");
 	  break;
 	case 0x12:
-	  *value=String(data[0]); //BIT ENCODED TODO: DECODE
+		switch(data[0]) {
+			case 1:
+				*value=String(F("Upstream"));
+				break;
+			case 2:
+				*value=String(F("Downstream of catalytic converter"));
+				break;
+			case 4:
+				*value=String(F("From the outside atmosphere or off"));
+				break;
+			case 8:
+				*value=String(F("Pump commanded on for diagnostics"));
+				break;
+			default:
+				*value=String(F("ERROR - INVALID VALUE"));
+				break;
+		}
+	  
 	  *unit="";
 	  *desc=F("Commanded secondary air status");
 	  break;
@@ -416,7 +502,49 @@ void ELM::parsePID(byte pid, String raw_data, String *value, String *unit, Strin
 		break;
 
 	case 0x1C:
-		*value=String(data[0]); // BIT ENCODED TODO: DECODE
+	
+		
+		switch(A) {
+		
+			case 1:	temp1C = F("OBD-II as defined by the CARB"); break;
+			case 2:	temp1C = F("OBD as defined by the EPA"); break;
+			case 3:	temp1C = F("OBD and OBD-II"); break;
+			case 4:	temp1C = F("OBD-I"); break;
+			case 5:	temp1C = F("Not OBD compliant"); break;
+			case 6:	temp1C = F("EOBD (Europe)"); break;
+			case 7:	temp1C = F("EOBD and OBD-II"); break;
+			case 8:	temp1C = F("EOBD and OBD"); break;
+			case 9:	temp1C = F("EOBD, OBD and OBD II"); break;
+			case 10:	temp1C = F("JOBD (Japan)"); break;
+			case 11:	temp1C = F("JOBD and OBD II"); break;
+			case 12:	temp1C = F("JOBD and EOBD"); break;
+			case 13:	temp1C = F("JOBD, EOBD, and OBD II"); break;
+
+			case 17:	temp1C = F("Engine Manufacturer Diagnostics (EMD)"); break;
+			case 18:	temp1C = F("Engine Manufacturer Diagnostics Enhanced (EMD+)"); break;
+			case 19:	temp1C = F("Heavy Duty On-Board Diagnostics (Child/Partial) (HD OBD-C)"); break;
+			case 20:	temp1C = F("Heavy Duty On-Board Diagnostics (HD OBD)"); break;
+			case 21:	temp1C = F("World Wide Harmonized OBD (WWH OBD)"); break;
+
+			case 23:	temp1C = F("Heavy Duty Euro OBD Stage I without NOx control (HD EOBD-I)"); break;
+			case 24:	temp1C = F("Heavy Duty Euro OBD Stage I with NOx control (HD EOBD-I N)"); break;
+			case 25:	temp1C = F("Heavy Duty Euro OBD Stage II without NOx control (HD EOBD-II)"); break;
+			case 26:	temp1C = F("Heavy Duty Euro OBD Stage II with NOx control (HD EOBD-II N)"); break;
+			case 28:	temp1C = F("Brazil OBD Phase 1 (OBDBr-1)"); break;
+			case 29:	temp1C = F("Brazil OBD Phase 2 (OBDBr-2)"); break;
+			case 30:	temp1C = F("Korean OBD (KOBD)"); break;
+			case 31:	temp1C = F("India OBD I (IOBD I)"); break;
+			case 32:	temp1C = F("India OBD II (IOBD II)"); break;
+			case 33:	temp1C = F("Heavy Duty Euro OBD Stage VI (HD EOBD-IV)"); break;	
+			case 251:	case 252:	case 253:	case 254:	case 255:
+				temp1C = F("Not available for assignment (SAE J1939 special meaning)"); break;
+				break;
+			default:
+				temp1C = F("Reserved"); break;
+				break;
+		}
+	
+		*value=temp1C;
 		*unit="";
 		*desc=F("OBD standards this vehicle conforms to");
 		break;
@@ -520,7 +648,7 @@ void ELM::parsePID(byte pid, String raw_data, String *value, String *unit, Strin
 		*unit="";
 		*desc=F("");
 		break;
-	case 0x32:
+	case 0x32: // TWOs Complement
 		*value=String(data[0]);
 		*unit="";
 		*desc=F("");

@@ -27,6 +27,8 @@ class ELM {
 	void get_available_pids();
 	void reset();
 	void parsePID(byte pid, String raw_data, String *value, String *unit, String *desc, byte data_length);
+	void clearDTC();
+	void readDTC();
 	String get_pid(byte id);
 	byte res2byte(String in, byte pos);
 };
