@@ -97,32 +97,120 @@ BOOL checkPacket() {
   return TRUE;
 }
 
+String make_json(String _cmd, String _status, String _data = "") {
+  String json = "{";
+
+  json += "\"cmd\":\""+_cmd+"\",";
+  json += "\"status\":\""+_status+"\"";
+
+  if (_data == "") {
+    json += ",\"data\":"+_data;
+  }
+  
+  json += "}";
+  
+  return json;
+}
+String make_jsondata_pid(BYTE pid, String value) {
+  String data = "{\"pid\":"+(String)pid+",";
+  data += "\"value\":\""+value+"\",";
+  data += "\"unit\":\""+elm.get_pid_unit(pid)+"\",";
+  data += "\"desc\":\""+elm.get_pid_desc(pid)+"\"";
+  data += "}";
+  return data;
+}
+
+void respond(String data) {
+  if(debugging) usb_serial.println(data);
+  Bridge.put("data", data);
+}
+
 void reset() {
-  if (debugging) usb_serial.println("[Debugging] linuino cmd: reset()");
-  if(elm.reset()) usb_serial.println("OK") else usb_serial.println("Error");
+  //if (debugging) usb_serial.println("[Debugging] linuino cmd: reset()");
+  if (elm.reset()) {
+    respond(make_json("reset","ok"));
+  } else {
+    respond(make_json("reset","error"));
+  };
 }
 
 void available_pids() {
-  if (debugging) usb_serial.println("[Debugging] linuino cmd: available_pids()");
+  //if (debugging) usb_serial.println("[Debugging] linuino cmd: available_pids()");
+  String data = elm.get_available_pids();
+  if (!data.startsWith(elm.ERROR)) {
+    respond(make_json("available_pid", "ok", "["+data+"]"));
+  } else {
+    respond(make_json("available_pid", "error"));
+  }
 }
 
 void read_all() {
-  if (debugging) usb_serial.println("[Debugging] linuino cmd: read_all()");
+  //if (debugging) usb_serial.println("[Debugging] linuino cmd: read_all()");
+  String data = "";
+  boolean first = true;
+  boolean error = false;
+  for (int i = 0; i <= 255; i++) {
+    if(pid_available(i)) {
+      if (first) {first = false} else {data += ","};
+      String value = elm.get_pid_data(pid);
+      if (!value.startsWith(elm.ERROR) {
+        data += make_jsondata_pid(pid,value);
+      } else {
+         error = true;
+         break;
+      }
+    }
+  }
+  if (!error) {
+    respond(make_json("read_all", "ok", "["+data+"]"));
+  } else {
+    respond(make_json("read_all", "error"));
+  }
 }
 
-void read_pid(int pid) {
-  if (debugging) usb_serial.println("[Debugging] linuino cmd: read_pid(0x"+String(pid, HEX)+")");
+void read_pid(BYTE pid) {
+  //if (debugging) usb_serial.println("[Debugging] linuino cmd: read_pid(0x"+String(pid, HEX)+")");
+  String value = elm.get_pid_data(pid);
+  if (!data.startsWith(elm.ERROR)) {
+    respond(make_json("read_pid", "ok",  "["+make_jsondata_pid(pid,value)+"]"));
+  } else {
+    respond(make_json("read_pid", "error"));
+  }
 }
 
 void read_car() {
-  if (debugging) usb_serial.println("[Debugging] linuino cmd: read_car()");
+  //if (debugging) usb_serial.println("[Debugging] linuino cmd: read_car()");
+  String value_vin = elm.get_vin();
+  String value_ecu = elm.get_ecu();
+  String value_voltage = elm.get_voltage();
+  if ((!value_vin.startsWith(elm.ERROR))||(!value_ecu.startsWith(elm.ERROR))||(!value_voltage.startsWith(elm.ERROR))) {    
+    String data += "\"vin\":\""+value_vin+"\",";
+    data += "\"ecu\":\""+value_ecu+"\",";
+    data += "\"voltage\":\""+value_voltage+"\"";
+    respond(make_json("read_car","ok", "{"+data+"}"));
+  } else {
+    respond(make_json("read_car","error"));
+  }
 }
 
 void read_dtc() {
-  if (debugging) usb_serial.println("[Debugging] linuino cmd: read_dct()");
+  //if (debugging) usb_serial.println("[Debugging] linuino cmd: read_dct()");
+  String value = elm.get_dtc();  
+  if (!value.startsWith(elm.ERROR) {
+    respond(make_json("read_dtc","ok", "[\""+value.replace(",","\",\"")+"\"]"));
+  } else {
+    respond(make_json("read_dtc","error"));
+  }
 }
 
 void delete_dtc() {
-  if (debugging) usb_serial.println("[Debugging] linuino cmd: delete_dct()");
+  //if (debugging) usb_serial.println("[Debugging] linuino cmd: delete_dct()");
+  if (elm.delete_dtc()) {
+    respond(make_json("delete_dtc","ok"));
+  } else {
+    respond(make_json("delete_dtc","error"));
+  };
 }
+
+
 
