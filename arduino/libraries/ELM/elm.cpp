@@ -26,6 +26,78 @@ void ELM::begin(int UARTBAUD){
   UART->begin(_UARTBAUD);
 }
 
+const String ELM::ERROR = "ERROR";
+
+/*
+ * Reset ELM Chip
+ *
+ */
+boolean ELM::reset() {
+	AT("ATZ");
+	return true;
+}
+
+/*
+ * Return comma-separated list of available PIDs
+ *
+ */
+String ELM::get_available_pids() {
+
+}
+
+/*
+ * Return bool if pid available
+ *
+ */
+boolean ELM::pid_available(byte pid) {
+	if (!available_pids_checked) {
+		get_available_pids_helper();
+	}
+	return available_pids[pid];
+}
+
+
+String ELM::get_pid_rawdata(byte id) {
+	if (!available_pids_checked) {
+		get_available_pids_helper();
+	}
+	String data = AT(pid(id));
+}
+
+String ELM::get_pid_data(byte id) {
+
+}
+
+
+String ELM::get_pid_unit(byte id) {
+
+}
+
+
+String ELM::get_pid_desc(byte id) {
+
+}
+
+String ELM::get_vin() {
+
+}
+
+String ELM::get_ecu() {
+
+}
+
+String ELM::get_voltage() {
+
+}
+
+String ELM::get_dtc() {
+
+}
+
+boolean ELM::clear_dtc() {
+
+}
+
 
 /*
  * Build AT command to get current data by specified PID
@@ -43,11 +115,11 @@ String ELM::pid(byte id) {
  * Get value by specified PID
  *
  */
-String ELM::get_pid(byte id) {
+/*String ELM::get_pid(byte id) {
 	
 	String data = AT(pid(id));
 	
-	if(!supported_pids[id]) {
+	if(!available_pids[id]) {
 		return "PID not supported by ECU";
 	}	
 	
@@ -64,7 +136,7 @@ String ELM::get_pid(byte id) {
 	Serial.println(myVal + " " + myUnit + " (" + myDesc + ")" );
 	
 	return myVal;
-}
+}*/
  
  
 /*
@@ -105,36 +177,36 @@ void ELM::get_available_pids_helper(){
 	
 	// initialize supported pid list
 	for (int h = 0; h < 256; h++) {
-		supported_pids[h] = false;
+		available_pids[h] = false;
 	}	
-	supported_pids[0] = true; // PID0 is always supported and can't be checked for support
+	available_pids[0] = true; // PID0 is always supported and can't be checked for support
 	
 	
 	get_available_pid_set(1);
 	
 	
 	// Check if pid 0x20 is available (meaning next set is supported)
-	if ( supported_pids[0x20] ) {
+	if ( available_pids[0x20] ) {
 		
 		get_available_pid_set(2);
 	
-		if ( supported_pids[0x40] ) {
+		if ( available_pids[0x40] ) {
 		
 			get_available_pid_set(3);
 		
-			if ( supported_pids[0x60] ) {
+			if ( available_pids[0x60] ) {
 		
 				get_available_pid_set(4);
 				
-				if ( supported_pids[0x80] ) {
+				if ( available_pids[0x80] ) {
 		
 					get_available_pid_set(5);
 					
-					if ( supported_pids[0xA0] ) {
+					if ( available_pids[0xA0] ) {
 		
 						get_available_pid_set(6);
 						
-						if ( supported_pids[0xC0] ) {
+						if ( available_pids[0xC0] ) {
 		
 							get_available_pid_set(7);
 							
@@ -143,7 +215,9 @@ void ELM::get_available_pids_helper(){
 				}
 			}	
 		}	
-	}	
+	}
+
+	available_pids_checked = true;
 	
 	
 }
@@ -208,42 +282,15 @@ void ELM::get_available_pid_set(byte set) {
 	for (int i = 0; i < (bin1.length() + 1); i++) {
 
 		if (bin1.charAt(i) == '0') {
-			supported_pids[i+m] = false;
+			available_pids[i+m] = false;
 		} else {
-			supported_pids[i+m] = true;
+			available_pids[i+m] = true;
 			Serial.print(String(i+m,DEC) + " ");//DEBUG
 		}		
 		
 	}
 	
 }	
-
-/*
- * reset ELM chip
- *
- */
-void ELM::reset() {
-	
-	AT("ATZ");
-}	
-
-/*
- * Clear stored trouble codes 
- * 
- */
-void ELM::clearDTC() {
-
-	AT("04");
-}
-
-/*
- * Read stored trouble codes
- *  
- */
-void ELM::readDTC() {
-	
-	Serial.println(AT("03"));
-}
 
 /*
  * ELM327 AT command and response handler

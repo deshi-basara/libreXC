@@ -21,25 +21,28 @@ class ELM {
     String pid(byte id);
     void get_available_pid_set(byte set);
     void get_available_pids_helper();    
+    boolean available_pids[256];
+    boolean available_pids_checked = false;
     void parsePID(byte pid, String raw_data, String *value, String *unit, String *desc, byte data_length);
     byte res2byte(String in, byte pos);
   public:
     ELM(byte RX, byte TX);
     void begin(int UARTBAUD);
-    boolean available_pids[256];
+    static const String ERROR;
     
     // reset
     boolean reset();
     // available_pids
     String get_available_pids(); /* gibt die verfügbaren PIDs als kommagetrennte Liste zurück,
                                     schreibt supported_pids */ 
+    boolean pid_available(byte pid);
     // read_all
     // gibt's in der Library nicht, wird im Arduino-Sketch umgesetzt
     // read_pid
     String get_pid_rawdata(byte pid);
     String get_pid_data(byte pid);
     String get_pid_unit(byte pid);
-    String get_pid_description(byte pid);
+    String get_pid_desc(byte pid);
     // read_car
     String get_vin();
     String get_ecu();
@@ -48,13 +51,6 @@ class ELM {
     String get_dtc();
     // delete_dct
     boolean clear_dtc();
-
-
-    // old
-    //void get_available_pids();
-    //String get_pid(byte id);
-    //void clearDTC();
-    //void readDTC();
 };
 
 #endif

@@ -150,11 +150,11 @@ void read_all() {
   boolean first = true;
   boolean error = false;
   for (int i = 0; i <= 255; i++) {
-    if(pid_available(i)) {
-      if (first) {first = false} else {data += ","};
-      String value = elm.get_pid_data(pid);
-      if (!value.startsWith(elm.ERROR) {
-        data += make_jsondata_pid(pid,value);
+    if(elm.pid_available(i)) {
+      if (first) {first = false;} else {data += ",";}
+      String value = elm.get_pid_data(i);
+      if (!value.startsWith(elm.ERROR)) {
+        data += make_jsondata_pid(i,value);
       } else {
          error = true;
          break;
@@ -171,7 +171,7 @@ void read_all() {
 void read_pid(BYTE pid) {
   //if (debugging) usb_serial.println("[Debugging] linuino cmd: read_pid(0x"+String(pid, HEX)+")");
   String value = elm.get_pid_data(pid);
-  if (!data.startsWith(elm.ERROR)) {
+  if (!value.startsWith(elm.ERROR)) {
     respond(make_json("read_pid", "ok",  "["+make_jsondata_pid(pid,value)+"]"));
   } else {
     respond(make_json("read_pid", "error"));
@@ -184,7 +184,7 @@ void read_car() {
   String value_ecu = elm.get_ecu();
   String value_voltage = elm.get_voltage();
   if ((!value_vin.startsWith(elm.ERROR))||(!value_ecu.startsWith(elm.ERROR))||(!value_voltage.startsWith(elm.ERROR))) {    
-    String data += "\"vin\":\""+value_vin+"\",";
+    String data = "\"vin\":\""+value_vin+"\",";
     data += "\"ecu\":\""+value_ecu+"\",";
     data += "\"voltage\":\""+value_voltage+"\"";
     respond(make_json("read_car","ok", "{"+data+"}"));
@@ -195,9 +195,10 @@ void read_car() {
 
 void read_dtc() {
   //if (debugging) usb_serial.println("[Debugging] linuino cmd: read_dct()");
-  String value = elm.get_dtc();  
-  if (!value.startsWith(elm.ERROR) {
-    respond(make_json("read_dtc","ok", "[\""+value.replace(",","\",\"")+"\"]"));
+  String data = elm.get_dtc();  
+  if (!data.startsWith(elm.ERROR)) {
+    data.replace(",", "\",\"");
+    respond(make_json("read_dtc","ok", "[\""+data+"\"]"));
   } else {
     respond(make_json("read_dtc","error"));
   }
@@ -205,7 +206,7 @@ void read_dtc() {
 
 void delete_dtc() {
   //if (debugging) usb_serial.println("[Debugging] linuino cmd: delete_dct()");
-  if (elm.delete_dtc()) {
+  if (elm.clear_dtc()) {
     respond(make_json("delete_dtc","ok"));
   } else {
     respond(make_json("delete_dtc","error"));
