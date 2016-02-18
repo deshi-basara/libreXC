@@ -32,24 +32,38 @@ const String ELM::ERROR = "ERROR";
  * Reset ELM Chip
  *
  */
-boolean ELM::reset() {
-	AT("ATZ");
-	return true;
+boolean ELM::reset() { // tested
+	if (AT("ATZ").startsWith("ELM327")) {
+		return true;
+	} else {
+		return false;
+	}
 }
 
 /*
  * Return comma-separated list of available PIDs
  *
  */
-String ELM::get_available_pids() {
-
+String ELM::get_available_pids() { // tested
+	if (!available_pids_checked) {
+		get_available_pids_helper();
+	}
+	String data = "";
+	boolean first = true;
+	for (int i = 0; i <= 255; i++) {
+		if (available_pids[i]) {
+			if (first) {first = false;} else {data += ",";}
+			data += i;
+		}
+	}
+	return data;
 }
 
 /*
  * Return bool if pid available
  *
  */
-boolean ELM::pid_available(byte pid) {
+boolean ELM::pid_available(byte pid) { // not tested yet
 	if (!available_pids_checked) {
 		get_available_pids_helper();
 	}

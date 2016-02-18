@@ -39,6 +39,11 @@ void loop() {
     }
     handleData();
   }
+  /* For testing without linuino
+  data[0] = 0x01;
+  data[1] = 0x00;
+  handleData();
+  delay(5000);*/
 }
 
 void handleData() {
@@ -103,7 +108,7 @@ String make_json(String _cmd, String _status, String _data = "") {
   json += "\"cmd\":\""+_cmd+"\",";
   json += "\"status\":\""+_status+"\"";
 
-  if (_data == "") {
+  if (_data != "") {
     json += ",\"data\":"+_data;
   }
   
@@ -138,9 +143,9 @@ void available_pids() {
   //if (debugging) usb_serial.println("[Debugging] linuino cmd: available_pids()");
   String data = elm.get_available_pids();
   if (!data.startsWith(elm.ERROR)) {
-    respond(make_json("available_pid", "ok", "["+data+"]"));
+    respond(make_json("available_pids", "ok", "["+data+"]"));
   } else {
-    respond(make_json("available_pid", "error"));
+    respond(make_json("available_pids", "error"));
   }
 }
 
