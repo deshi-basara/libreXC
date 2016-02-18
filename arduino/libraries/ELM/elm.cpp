@@ -101,7 +101,7 @@ byte ELM::res2byte(String in, byte pos) {
  * Get complete list of supported PIDs
  *
  */
-void ELM::get_available_pids(){
+void ELM::get_available_pids_helper(){
 	
 	// initialize supported pid list
 	for (int h = 0; h < 256; h++) {
@@ -287,7 +287,7 @@ String ELM::AT(String Cmd)
       }
     }
     //timeout
-    if (millis()>timestamp+2000) {
+    if ((unsigned long)(millis()-timestamp)>2000) {
       break;
     }
   }

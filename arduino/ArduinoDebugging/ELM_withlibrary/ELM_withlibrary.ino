@@ -32,13 +32,6 @@ void setup() {
 }
 
 void loop() {
-  /*if (linuino.available()) {  
-    int data = linuino.read();
-    usb_serial.print(String(data, HEX)+" ");
-  }*/
-
-
-  
   receiveData();
   if(checkPacket()) {
     for(SHORT i = 0; i < PACK_PAY_LEN; i++) {
@@ -55,8 +48,8 @@ void handleData() {
     case 0x03: read_all(); break;
     case 0x04: read_pid(data[1]); break;
     case 0x05: read_car(); break;
-    case 0x06: read_dct(); break;
-    case 0x07: delete_dct(); break;
+    case 0x06: read_dtc(); break;
+    case 0x07: delete_dtc(); break;
   }
 }
 
@@ -106,6 +99,7 @@ BOOL checkPacket() {
 
 void reset() {
   if (debugging) usb_serial.println("[Debugging] linuino cmd: reset()");
+  if(elm.reset()) usb_serial.println("OK") else usb_serial.println("Error");
 }
 
 void available_pids() {
@@ -124,11 +118,11 @@ void read_car() {
   if (debugging) usb_serial.println("[Debugging] linuino cmd: read_car()");
 }
 
-void read_dct() {
+void read_dtc() {
   if (debugging) usb_serial.println("[Debugging] linuino cmd: read_dct()");
 }
 
-void delete_dct() {
+void delete_dtc() {
   if (debugging) usb_serial.println("[Debugging] linuino cmd: delete_dct()");
 }
 
