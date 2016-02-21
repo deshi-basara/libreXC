@@ -216,7 +216,7 @@ String ELM::pid(byte id) {
  
 /*
  * Convert ELM Mode 1 Command Response to Byte
- *
+ * deprecated, use hex2byte instead
  */ 
 byte ELM::res2byte(String in, byte pos) {
 	
@@ -242,8 +242,21 @@ byte ELM::res2byte(String in, byte pos) {
 	
 	
 	return bytes[pos];
-}	
+}
  
+/*
+ * Convert hex string to byte
+ *
+ */ 
+byte ELM::hex2byte(String in, byte pos, String separator) {
+	int seplen = separator.length();
+	String part = in.substring(pos*(2+seplen),pos*(2+seplen)+2);
+	char partchar[3];
+	part.toCharArray(partchar, 3);
+	unsigned long l = strtoul(partchar,NULL,16);
+	return l & 0xFF;
+}
+	
 /*
  * Update the list of supported PIDs
  *

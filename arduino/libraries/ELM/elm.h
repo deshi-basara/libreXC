@@ -24,7 +24,8 @@ class ELM {
     boolean available_pids[256];
     boolean available_pids_checked = false;
     void parsePID(byte pid, String raw_data, String *value, String *unit, String *desc, byte data_length);
-    byte res2byte(String in, byte pos);
+    byte res2byte(String in, byte pos); // deprecated, use hex2byte instead
+    byte hex2byte(String in, byte pos, String separator = "");
   public:
     ELM(byte RX, byte TX);
     void begin(int UARTBAUD);
