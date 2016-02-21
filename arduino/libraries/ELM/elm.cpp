@@ -93,8 +93,22 @@ String ELM::get_pid_rawdata(byte id) {  // tested, works
  *
  */
 String ELM::get_pid_data(byte id) {
-	//String rawdata = get_pid_rawdata();
-	return ERROR+" function not implemented in library";
+	String rawdata = get_pid_rawdata(id);
+
+	String myVal =  "";
+	String myUnit = "";
+	String myDesc = "";
+	
+	byte data_length = ((rawdata.length()+1)/3);
+	byte data[data_length];
+
+	for (int i = 0; i < data_length; i++) {
+		data[i] = hex2byte(rawdata,i," ");
+	}
+	
+	//parsePID(id, data, &myVal, &myUnit, &myDesc);
+
+	return myVal+myUnit+myDesc;
 }
 
 /*
@@ -437,13 +451,13 @@ String ELM::AT(String Cmd)
  * Return parsed value, unit and PID description from supported raw data
  *
  */
-void ELM::parsePID(byte pid, String raw_data, String *value, String *unit, String *desc, byte data_length) {
+void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *desc) {
 	
-	byte data[13];
+	/*byte data[13];
 	
 	for(int n = 0; n < data_length; n++){
 		data[n] = res2byte(raw_data, n);	
-	}
+	}*/
 	
 	#define A data[0]
 	#define B data[1]
