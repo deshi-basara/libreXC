@@ -19,8 +19,8 @@ class ELM {
     SoftwareSerial *UART;
     String AT(String Cmd);
     String pid(byte id);
-    void get_available_pid_set(byte set);
-    void get_available_pids_helper();    
+    void update_available_pidset(byte set);
+    void update_available_pids();    
     boolean available_pids[256];
     boolean available_pids_checked = false;
     void parsePID(byte pid, String raw_data, String *value, String *unit, String *desc, byte data_length);
@@ -47,6 +47,7 @@ class ELM {
     String get_vin();
     String get_ecu();
     String get_voltage();
+    String get_protocol();
     // read_dct
     String get_dtc();
     // delete_dct

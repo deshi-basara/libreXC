@@ -40,21 +40,21 @@ void loop() {
     handleData();
   }
   /* For testing without linuino
-  data[0] = 0x01;
+  data[0] = 0x06;
   data[1] = 0x00;
   handleData();
-  delay(5000);*/
+  delay(5000);/*
 }
 
 void handleData() {
   switch (data[0]) {
-    case 0x01: reset(); break;
-    case 0x02: available_pids(); break;
+    case 0x01: reset(); break; // tested, works
+    case 0x02: available_pids(); break; // tested, works
     case 0x03: read_all(); break;
     case 0x04: read_pid(data[1]); break;
-    case 0x05: read_car(); break;
-    case 0x06: read_dtc(); break;
-    case 0x07: delete_dtc(); break;
+    case 0x05: read_car(); break; // tested, works
+    case 0x06: read_dtc(); break; // tested, works
+    case 0x07: delete_dtc(); break; // tested, works
   }
 }
 
@@ -185,13 +185,29 @@ void read_pid(BYTE pid) {
 
 void read_car() {
   //if (debugging) usb_serial.println("[Debugging] linuino cmd: read_car()");
-  String value_vin = elm.get_vin();
-  String value_ecu = elm.get_ecu();
-  String value_voltage = elm.get_voltage();
-  if ((!value_vin.startsWith(elm.ERROR))||(!value_ecu.startsWith(elm.ERROR))||(!value_voltage.startsWith(elm.ERROR))) {    
-    String data = "\"vin\":\""+value_vin+"\",";
-    data += "\"ecu\":\""+value_ecu+"\",";
-    data += "\"voltage\":\""+value_voltage+"\"";
+  boolean error = false;
+  String data = "";
+  while (true) {
+    String value_vin = elm.get_vin();
+    if (!value_vin.startsWith(elm.ERROR)) {
+      data += "\"vin\":\""+value_vin+"\",";
+    } else {error=true;break;}    
+    String value_ecu = elm.get_ecu();
+    if ((!error)&&(!value_ecu.startsWith(elm.ERROR))) {
+      data += "\"ecu\":\""+value_ecu+"\",";
+    } else {error=true;break;}     
+    String value_voltage = elm.get_voltage();
+    if ((!error)&&(!value_voltage.startsWith(elm.ERROR))) {
+      data += "\"voltage\":\""+value_voltage+"\",";
+    } else {error=true;break;}  
+    String value_protocol = elm.get_protocol();
+    if ((!error)&&(!value_protocol.startsWith(elm.ERROR))) {
+      data += "\"protocol\":\""+value_protocol+"\"";
+    } else {error=true;break;}     
+    break;
+  }
+  
+  if (!error) {
     respond(make_json("read_car","ok", "{"+data+"}"));
   } else {
     respond(make_json("read_car","error"));
@@ -202,8 +218,10 @@ void read_dtc() {
   //if (debugging) usb_serial.println("[Debugging] linuino cmd: read_dct()");
   String data = elm.get_dtc();  
   if (!data.startsWith(elm.ERROR)) {
+    /* for parsed dtc's
     data.replace(",", "\",\"");
-    respond(make_json("read_dtc","ok", "[\""+data+"\"]"));
+    respond(make_json("read_dtc","ok", "[\""+data+"\"]")); */
+    respond(make_json("read_dtc","ok","\""+data+"\""));
   } else {
     respond(make_json("read_dtc","error"));
   }

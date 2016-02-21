@@ -32,7 +32,7 @@ const String ELM::ERROR = "ERROR";
  * Reset ELM Chip
  *
  */
-boolean ELM::reset() { // tested
+boolean ELM::reset() { // tested, works
 	if (AT("ATZ").startsWith("ELM327")) {
 		return true;
 	} else {
@@ -44,9 +44,9 @@ boolean ELM::reset() { // tested
  * Return comma-separated list of available PIDs
  *
  */
-String ELM::get_available_pids() { // tested
+String ELM::get_available_pids() { // tested, works
 	if (!available_pids_checked) {
-		get_available_pids_helper();
+		update_available_pids();
 	}
 	String data = "";
 	boolean first = true;
@@ -65,51 +65,72 @@ String ELM::get_available_pids() { // tested
  */
 boolean ELM::pid_available(byte pid) { // not tested yet
 	if (!available_pids_checked) {
-		get_available_pids_helper();
+		update_available_pids();
 	}
 	return available_pids[pid];
 }
 
 
-String ELM::get_pid_rawdata(byte id) {
+String ELM::get_pid_rawdata(byte id) {  // not tested yet
 	if (!available_pids_checked) {
-		get_available_pids_helper();
+		update_available_pids();
+	}
+	if (!pid_available(id)) {
+		return ERROR+" pid not available";
 	}
 	String data = AT(pid(id));
+	return data;
 }
 
 String ELM::get_pid_data(byte id) {
-
+	//String rawdata = get_pid_rawdata();
+	return ERROR+" function not implemented in library";
 }
 
 
 String ELM::get_pid_unit(byte id) {
-
+	return ERROR+" function not implemented in library";
 }
 
 
 String ELM::get_pid_desc(byte id) {
-
+	return ERROR+" function not implemented in library";
 }
 
-String ELM::get_vin() {
-
+String ELM::get_vin() { // tested (without vehicle), response is NO DATA, works
+	return AT("0902");
 }
 
-String ELM::get_ecu() {
-
+String ELM::get_ecu() { // tested (without vehicle), response is NO DATA, works
+	return AT("090A");
 }
 
-String ELM::get_voltage() {
-
+String ELM::get_voltage() { // tested, works
+	return AT("ATRV");
 }
 
-String ELM::get_dtc() {
-
+String ELM::get_protocol() { // tested, works
+	String data = AT("ATDP");
+	if (data.startsWith("AUTO")) {
+		data = data.substring(6);
+	}
+	return data;
 }
 
-boolean ELM::clear_dtc() {
+String ELM::get_dtc() {  // tested, no parsing of error codes, works
+	String data = AT("03");
+	if (data.startsWith("43")) {
+		data = data.substring(3);
+	}
+	return data;
+}
 
+boolean ELM::clear_dtc() { // tested (without present dtc's), works
+	if (AT("04").startsWith("44")) {
+		return true;
+	} else {
+		return false;
+	}
 }
 
 
@@ -187,7 +208,7 @@ byte ELM::res2byte(String in, byte pos) {
  * Get complete list of supported PIDs
  *
  */
-void ELM::get_available_pids_helper(){
+void ELM::update_available_pids(){
 	
 	// initialize supported pid list
 	for (int h = 0; h < 256; h++) {
@@ -196,33 +217,33 @@ void ELM::get_available_pids_helper(){
 	available_pids[0] = true; // PID0 is always supported and can't be checked for support
 	
 	
-	get_available_pid_set(1);
+	update_available_pidset(1);
 	
 	
 	// Check if pid 0x20 is available (meaning next set is supported)
 	if ( available_pids[0x20] ) {
 		
-		get_available_pid_set(2);
+		update_available_pidset(2);
 	
 		if ( available_pids[0x40] ) {
 		
-			get_available_pid_set(3);
+			update_available_pidset(3);
 		
 			if ( available_pids[0x60] ) {
 		
-				get_available_pid_set(4);
+				update_available_pidset(4);
 				
 				if ( available_pids[0x80] ) {
 		
-					get_available_pid_set(5);
+					update_available_pidset(5);
 					
 					if ( available_pids[0xA0] ) {
 		
-						get_available_pid_set(6);
+						update_available_pidset(6);
 						
 						if ( available_pids[0xC0] ) {
 		
-							get_available_pid_set(7);
+							update_available_pidset(7);
 							
 						}
 					}
@@ -240,7 +261,7 @@ void ELM::get_available_pids_helper(){
  * Get supported PIDs defined by set (1-7)
  *
  */
-void ELM::get_available_pid_set(byte set) {
+void ELM::update_available_pidset(byte set) {
 	
 	String cmd1;
 	
@@ -312,12 +333,16 @@ void ELM::get_available_pid_set(byte set) {
  */
 String ELM::AT(String Cmd)
 {
+  String ErrorMessage = ""; // error message for errors in AT communication
   //generate command char array
   int len = Cmd.length();
   char cmd[len+1];
   Cmd.toCharArray(cmd,len+1);
   //send to elm
-  UART->println(Cmd);
+  for (int i = 0; i <= len; i++) {
+    UART->write(cmd[i]);
+  }
+  UART->write(13);
   //wait for response and process received data
   int i = 0; //received characters  
   unsigned long timestamp = millis(); //set timestamp for timeout
@@ -329,15 +354,15 @@ String ELM::AT(String Cmd)
         response = UART->read();
         i++;
         if (cmd[i-1]!=response){ //check echo characters
-          //Todo: error handling
-          break;
+        	return ERROR+"A "+ErrorMessage; // return error message
+        	break;
         }
       } 
       else { //echo complete
         response = UART->read();
         i++;
         if (response!=62) {
-          if (response!=13/*&&received!=32*/) {
+          if (response>=32) { //don't use control characters
             Response += String(response);
           }
         } 
@@ -349,6 +374,7 @@ String ELM::AT(String Cmd)
     }
     //timeout
     if ((unsigned long)(millis()-timestamp)>2000) {
+      return ERROR+"B "+ErrorMessage; // return error message
       break;
     }
   }
