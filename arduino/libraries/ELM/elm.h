@@ -23,7 +23,9 @@ class ELM {
     void update_available_pids();    
     boolean available_pids[256];
     boolean available_pids_checked = false;
+	//#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
     void parsePID(byte pid, byte data[], String *value, String *unit, String *desc);
+	//#endif
     byte res2byte(String in, byte pos); // deprecated, use hex2byte instead
     byte hex2byte(String in, byte pos, String separator = "");
   public:

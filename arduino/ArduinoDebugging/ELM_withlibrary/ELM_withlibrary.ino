@@ -1,4 +1,4 @@
-#include <Bridge.h>
+//#include <Bridge.h>
 #include <SoftwareSerial.h>
 #include <elm.h>
 
@@ -32,6 +32,9 @@ void setup() {
 }
 
 void loop() {
+	
+	elm.get_pid_data(0x05);
+	
   receiveData();
   if(checkPacket()) {
     for(SHORT i = 0; i < PACK_PAY_LEN; i++) {
@@ -39,11 +42,13 @@ void loop() {
     }
     handleData();
   }
+
   /* For testing without linuino
   data[0] = 0x06;
   data[1] = 0x00;
   handleData();
-  delay(5000);/*
+  delay(5000);
+  */
 }
 
 void handleData() {
@@ -127,7 +132,7 @@ String make_jsondata_pid(BYTE pid, String value) {
 
 void respond(String data) {
   if(debugging) usb_serial.println(data);
-  Bridge.put("data", data);
+  //Bridge.put("data", data);
 }
 
 void reset() {
@@ -218,9 +223,9 @@ void read_dtc() {
   //if (debugging) usb_serial.println("[Debugging] linuino cmd: read_dct()");
   String data = elm.get_dtc();  
   if (!data.startsWith(elm.ERROR)) {
-    /* for parsed dtc's
+     //for parsed dtc's
     data.replace(",", "\",\"");
-    respond(make_json("read_dtc","ok", "[\""+data+"\"]")); */
+    respond(make_json("read_dtc","ok", "[\""+data+"\"]"));
     respond(make_json("read_dtc","ok","\""+data+"\""));
   } else {
     respond(make_json("read_dtc","error"));

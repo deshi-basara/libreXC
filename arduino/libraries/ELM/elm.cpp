@@ -106,8 +106,10 @@ String ELM::get_pid_data(byte id) {
 		data[i] = hex2byte(rawdata,i," ");
 	}
 	
-	//parsePID(id, data, &myVal, &myUnit, &myDesc);
-
+	//#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+	parsePID(id, data, &myVal, &myUnit, &myDesc);
+	//#endif
+	
 	return myVal+myUnit+myDesc;
 }
 
@@ -120,7 +122,7 @@ String ELM::get_pid_unit(byte id) {
 }
 
 /*
- * Get specific PIDs description
+ * Get a specific PIDs description
  *
  */
 String ELM::get_pid_desc(byte id) {
@@ -144,7 +146,7 @@ String ELM::get_ecu() { // tested (without vehicle), response is NO DATA, works
 }
 
 /*
- * Get the car-batterys voltage
+ * Get the cars onboard voltage
  *
  */
 String ELM::get_voltage() { // tested, works
@@ -387,7 +389,7 @@ void ELM::update_available_pidset(byte set) {
 			available_pids[i+m] = false;
 		} else {
 			available_pids[i+m] = true;
-			Serial.print(String(i+m,DEC) + " ");//DEBUG
+			//Serial.print(String(i+m,DEC) + " ");//DEBUG
 		}		
 		
 	}
@@ -447,10 +449,51 @@ String ELM::AT(String Cmd)
 }
 
 
+void calc_percent(byte in, String *val, String *unit) {
+	
+	*val = String(in*100.0/255.0);
+	*unit = "%";
+	
+}
+
+void calc_temp(byte in, String *val, String *unit) {
+	
+	*val=String(in-40.0);
+	*unit="°C";
+	
+}
+
+void calc_os_val(byte in1, byte in2, String *val, String *unit) {
+	*val=String( (in1 / 200.0)  ) + "," + String( (in2 - 128.0) * 100.0 / 128.0 );
+	*unit="V, %";
+}
+
+void calc_o2s(byte in1, byte in2, byte in3, byte in4, String *val, String *unit) {
+	*val = String ( ((in1*256.0) + in2) * 2.0 / 65535.0 ) + ", " + String( ((in3*256.0) + in4) * 8.0 / 65535.0 ) ;
+	*unit = "n/a , V"; 
+}
+
+void calc_o2s_b(byte in1, byte in2, byte in3, byte in4, String *val, String *unit) {
+	*val = String ( ((in1*256.0) + in2) * 2.0 / 65535.0 ) + ", " + String( (((in3*256.0) + in4) / 256.0) - 128.0 ) ; 
+	*unit = "n/a , mA"; 
+}
+
+void calc_stsos(byte in1, byte in2, String *val, String *unit) {
+	*val=String((in1-128.0)*100.0/128.0) + ", " + String((in2-128.0)*100.0/128.0); 
+	*unit="%, %";
+}
+
+
+void calc_cat_temp(byte in1, byte in2, String *val, String *unit) {
+	*val = String ( (((in1*256)+in2)/10) - 40 ); 
+	*unit = "°C"; 	
+}
+
 /*
  * Return parsed value, unit and PID description from supported raw data
  *
  */
+//#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *desc) {
 	
 	/*byte data[13];
@@ -480,7 +523,7 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
   switch (pid) {
 	case 0x03: // Fuel system status (BIT ENCODED)
 		
-		switch(A) { // Fuel system #1
+		switch (A) { // Fuel system #1
 			case 1:
 				value_three_tmp=String(F("Open loop due to insufficient engine temperature"));
 				break;
@@ -527,11 +570,11 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
 		*desc = F("Fuel system status");
 		break;
     case 0x04: //Calculated engine load value
-      CALC_PERCENT
+      calc_percent(A, value, unit);
       *desc=F("Calculated engine load value");
       break;
     case 0x05: //Engine coolant temperature
-      CALC_TEMP
+      calc_temp(A, value, unit);
       *desc=F("Engine coolant temperature");
       break;
 	#define CALC_STFT \
@@ -539,7 +582,7 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
       *unit="%";
     case 0x06:
 		CALC_STFT
-		*desc=F("Long term fuel % trim - Bank 1");
+		*desc=F("Short term fuel % trim - Bank 1");
 		break;
     case 0x07:
 		CALC_STFT
@@ -547,7 +590,7 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
 		break;
     case 0x08:
 		CALC_STFT
-		*desc=F("Long term fuel % trim - Bank 2");
+		*desc=F("Short term fuel % trim - Bank 2");
 		break;
     case 0x09:
 		CALC_STFT
@@ -579,7 +622,7 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
 	  *desc=F("Timing advance");
 	  break;
 	case 0x0F:
-	  CALC_TEMP
+	  calc_temp(A, value, unit);
 	  *desc=F("Intake air temperature");
 	  break;
 	case 0x10:
@@ -588,7 +631,7 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
 	  *desc=F("MAF air flow rate");
 	  break;
 	case 0x11:
-	  CALC_PERCENT
+	  calc_percent(A, value, unit);
 	  *desc=F("Throtle position");
 	  break;
 	case 0x12:
@@ -623,39 +666,40 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
 	  *unit="V, %";
 	case 0x14:
 		*desc=F("Bank 1, Sensor1: Oxygen sensor voltage, Short term fuel trim");
-		CALC_OS_VAL
+		calc_os_val(A,B,value,unit);
 		break;
 	case 0x15:
 		*desc=F("Bank 1, Sensor2: Oxygen sensor voltage, Short term fuel trim");	  
-		CALC_OS_VAL
+		calc_os_val(A,B,value,unit);
 		break;
 	case 0x16:
 		*desc=F("Bank 1, Sensor3: Oxygen sensor voltage, Short term fuel trim");
-		CALC_OS_VAL
+		calc_os_val(A,B,value,unit);
 		break;
 	case 0x17:
 		*desc=F("Bank 1, Sensor4: Oxygen sensor voltage, Short term fuel trim");
-		CALC_OS_VAL
+		calc_os_val(A,B,value,unit);
 		break;
 	case 0x18:
 		*desc=F("Bank 2, Sensor1: Oxygen sensor voltage, Short term fuel trim");
-		CALC_OS_VAL
+		calc_os_val(A,B,value,unit);
 		break;
 	case 0x19:
 		*desc=F("Bank 2, Sensor2: Oxygen sensor voltage, Short term fuel trim");
-		CALC_OS_VAL
+		calc_os_val(A,B,value,unit);
 		break;
 	case 0x1A:
 		*desc=F("Bank 2, Sensor3: Oxygen sensor voltage, Short term fuel trim");
-		CALC_OS_VAL
+		calc_os_val(A,B,value,unit);
 		break;
 	case 0x1B:
 		*desc=F("Bank 2, Sensor4: Oxygen sensor voltage, Short term fuel trim");
-		CALC_OS_VAL
+		calc_os_val(A,B,value,unit);
 		break;
 
 	case 0x1C:
 	
+		
 		
 		switch(A) {
 		
@@ -739,35 +783,35 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
 	  *value = String ( ((data[0]*256.0) + data[1]) * 2.0 / 65535.0 ) + ", " + String( ((data[2]*256.0) + data[3]) * 8.0 / 65535.0 ) ; \
 	  *unit = "n/a , V"; 
 	case 0x24:
-		CALC_O2S
+		calc_o2s(A,B,C,D, value, unit);
 		*desc=F("O2S1_WR_lambda(1): Equivalence ratio, Voltage");
 		break;
 	case 0x25:
-		CALC_O2S
+		calc_o2s(A,B,C,D, value, unit);
 		*desc=F("O2S2_WR_lambda(1): Equivalence ratio, Voltage");
 		break;
 	case 0x26:
-		CALC_O2S
+		calc_o2s(A,B,C,D, value, unit);
 		*desc=F("O2S3_WR_lambda(1): Equivalence ratio, Voltage");
 		break;
 	case 0x27:
-		CALC_O2S
+		calc_o2s(A,B,C,D, value, unit);
 		*desc=F("O2S4_WR_lambda(1): Equivalence ratio, Voltage");
 		break;
 	case 0x28:
-		CALC_O2S
+		calc_o2s(A,B,C,D, value, unit);
 		*desc=F("O2S5_WR_lambda(1): Equivalence ratio, Voltage");
 		break;
 	case 0x29:
-		CALC_O2S
+		calc_o2s(A,B,C,D, value, unit);
 		*desc=F("O2S6_WR_lambda(1): Equivalence ratio, Voltage");
 		break;
 	case 0x2A:
-		CALC_O2S
+		calc_o2s(A,B,C,D, value, unit);
 		*desc=F("O2S7_WR_lambda(1): Equivalence ratio, Voltage");
 		break;
 	case 0x2B:
-		CALC_O2S
+		calc_o2s(A,B,C,D, value, unit);
 		*desc=F("O2S8_WR_lambda(1): Equivalence ratio, Voltage");
 		break;
 	
@@ -815,54 +859,54 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
 	  *value = String ( ((data[0]*256.0) + data[1]) * 2.0 / 65535.0 ) + ", " + String( (((data[2]*256.0) + data[3]) / 256.0) - 128.0 ) ; \
 	  *unit = "n/a , mA"; 	
 	case 0x34:
-		CALC_O2SB
+		calc_o2s_b(A,B,C,D, value, unit);
 		*desc=F("O2S1_WR_lambda(1): Equivalence ratio, Current");
 		break;
 	case 0x35:
-		CALC_O2SB
+		calc_o2s_b(A,B,C,D, value, unit);
 		*desc=F("O2S2_WR_lambda(1): Equivalence ratio, Current");
 		break;
 	case 0x36:
-		CALC_O2SB
+		calc_o2s_b(A,B,C,D, value, unit);
 		*desc=F("O2S3_WR_lambda(1): Equivalence ratio, Current");
 		break;
 	case 0x37:
-		CALC_O2SB
+		calc_o2s_b(A,B,C,D, value, unit);
 		*desc=F("O2S4_WR_lambda(1): Equivalence ratio, Current");
 		break;
 	case 0x38:
-		CALC_O2SB
+		calc_o2s_b(A,B,C,D, value, unit);
 		*desc=F("O2S5_WR_lambda(1): Equivalence ratio, Current");
 		break;
 	case 0x39:
-		CALC_O2SB
+		calc_o2s_b(A,B,C,D, value, unit);
 		*desc=F("O2S6_WR_lambda(1): Equivalence ratio, Current");
 		break;
 	case 0x3A:
-		CALC_O2SB
+		calc_o2s_b(A,B,C,D, value, unit);
 		*desc=F("O2S7_WR_lambda(1): Equivalence ratio, Current");
 		break;
 	case 0x3B:
-		CALC_O2SB
+		calc_o2s_b(A,B,C,D, value, unit);
 		*desc=F("O2S8_WR_lambda(1): Equivalence ratio, Current");
 		break;
 	#define CALC_CAT_TEMP \
 	  *value = String ( (((data[0]*256)+data[1])/10) - 40 ); \
 	  *unit = "°C"; 		
 	case 0x3C:
-		CALC_CAT_TEMP
+		calc_cat_temp(A,B,value,unit);
 		*desc=F("Catalyst Temperature Bank 1, Sensor 1");
 		break;
 	case 0x3D:
-		CALC_CAT_TEMP
+		calc_cat_temp(A,B,value,unit);
 		*desc=F("Catalyst Temperature Bank 2, Sensor 1");
 		break;
 	case 0x3E:
-		CALC_CAT_TEMP
+		calc_cat_temp(A,B,value,unit);
 		*desc=F("Catalyst Temperature Bank 1, Sensor 2");
 		break;
 	case 0x3F:
-		CALC_CAT_TEMP
+		calc_cat_temp(A,B,value,unit);
 		*desc=F("Catalyst Temperature Bank 2, Sensor 2");
 		break;
 	case 0x41:
@@ -886,7 +930,7 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
 		*desc=F("Fuel/Air commanded equivalence ratio");
 		break;
 	case 0x45:
-		CALC_PERCENT
+		calc_percent(data[0], value, unit);
 		*desc=F("Relative throttle position");
 		break;
 	case 0x46:
@@ -895,27 +939,27 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
 		*desc=F("Ambient air temperature");
 		break;
 	case 0x47:
-		CALC_PERCENT
+		calc_percent(data[0], value, unit);
 		*desc=F("Absolute throttle position B");
 		break;
 	case 0x48:
-		CALC_PERCENT
+		calc_percent(data[0], value, unit);
 		*desc=F("Absolute throttle position C");
 		break;
 	case 0x49:
-		CALC_PERCENT
+		calc_percent(data[0], value, unit);
 		*desc=F("Accelerator pedal position D");
 		break;
 	case 0x4A:
-		CALC_PERCENT
+		calc_percent(data[0], value, unit);
 		*desc=F("Accelerator pedal position E");
 		break;
 	case 0x4B:
-		CALC_PERCENT
+		calc_percent(data[0], value, unit);
 		*desc=F("Accelerator pedal position F");
 		break;
 	case 0x4C:
-		CALC_PERCENT
+		calc_percent(data[0], value, unit);
 		*desc=F("Commanded throttle actuator");
 		break;
 	case 0x4D:
@@ -944,7 +988,7 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
 		*desc=F("Fuel Type");
 		break;	
 	case 0x52:
-		CALC_PERCENT
+		calc_percent(data[0], value, unit);
 		*desc=F("Ethanol fuel %	");
 		break;	
 	case 0x53:
@@ -961,19 +1005,19 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
 		*value=String((A-128.0)*100.0/128.0) + ", " + String(String((B-128.0)*100.0/128.0)); \
 		*unit="%, %";
 	case 0x55:
-		CALC_STSOS
+		calc_stsos(A,B, value, unit);
 		*desc=F("Short term secondary oxygen sensor trim bank 1 and bank 3");
 		break;	
 	case 0x56:
-		CALC_STSOS
+		calc_stsos(A,B, value, unit);
 		*desc=F("Long term secondary oxygen sensor trim bank 1 and bank 3");
 		break;	
 	case 0x57:
-		CALC_STSOS
+		calc_stsos(A,B, value, unit);
 		*desc=F("Short term secondary oxygen sensor trim bank 2 and bank 4");
 		break;	
 	case 0x58:
-		CALC_STSOS
+		calc_stsos(A,B, value, unit);
 		*desc=F("Long term secondary oxygen sensor trim bank 2 and bank 4");
 		break;
 	case 0x59:
@@ -982,15 +1026,15 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
 		*desc=F("Fuel rail pressure (absolute)");
 		break;
 	case 0x5A:
-		CALC_PERCENT
+		calc_percent(data[0], value, unit);
 		*desc=F("Relative accelerator pedal position");
 		break;
 	case 0x5B:
-		CALC_PERCENT
+		calc_percent(data[0], value, unit);
 		*desc=F("Hybrid battery pack remaining life	");
 		break;
 	case 0x5C:
-		CALC_TEMP
+		calc_temp(A, value, unit);
 		*desc=F("Engine oil temperature");
 		break;
 	case 0x5D:
@@ -1166,6 +1210,39 @@ void ELM::parsePID(byte pid, byte data[], String *value, String *unit, String *d
 		break;	
     // usw.
   }
+  /*
+  switch(pid) {
+	
+	case 0x01:
+		*value="aa";
+		break;
+		
+	case 0x02:
+		*value="bb";
+		break;
+	
+	case 0x03:
+		*value="cc";
+		break;	
+		
+	case 0x04:
+		*value="dd";
+		break;		
+	
+	case 0x05:
+		*value="ee";
+		break;	
+	
+	case 0x06:
+		*value="ff";
+		break;	
+	
+	
+  }	  
+  */
 }
+//#endif
+
+
 
 #endif
