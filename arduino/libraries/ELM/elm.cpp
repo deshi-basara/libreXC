@@ -63,7 +63,7 @@ String ELM::get_available_pids() { // tested, works
  * Return bool if pid available
  *
  */
-boolean ELM::pid_available(byte pid) { // not tested yet
+boolean ELM::pid_available(byte pid) { // tested, works
 	if (!available_pids_checked) {
 		update_available_pids();
 	}
@@ -71,7 +71,7 @@ boolean ELM::pid_available(byte pid) { // not tested yet
 }
 
 
-String ELM::get_pid_rawdata(byte id) {  // not tested yet
+String ELM::get_pid_rawdata(byte id) {  // tested, works
 	if (!available_pids_checked) {
 		update_available_pids();
 	}
@@ -79,6 +79,9 @@ String ELM::get_pid_rawdata(byte id) {  // not tested yet
 		return ERROR+" pid not available";
 	}
 	String data = AT(pid(id));
+	if (data.startsWith((id<0x10)?"41 0"+String(id,HEX):"41 "+String(id,HEX))) {
+		data = data.substring(6);
+	}
 	return data;
 }
 
