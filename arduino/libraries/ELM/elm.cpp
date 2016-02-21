@@ -60,7 +60,7 @@ String ELM::get_available_pids() { // tested, works
 }
 
 /*
- * Return bool if pid available
+ * Check if specific PID is available
  *
  */
 boolean ELM::pid_available(byte pid) { // tested, works
@@ -70,7 +70,10 @@ boolean ELM::pid_available(byte pid) { // tested, works
 	return available_pids[pid];
 }
 
-
+/*
+ * Get specific PIDs raw data
+ *
+ */
 String ELM::get_pid_rawdata(byte id) {  // tested, works
 	if (!available_pids_checked) {
 		update_available_pids();
@@ -85,33 +88,59 @@ String ELM::get_pid_rawdata(byte id) {  // tested, works
 	return data;
 }
 
+/*
+ * Get specific PIDs parsed data
+ *
+ */
 String ELM::get_pid_data(byte id) {
 	//String rawdata = get_pid_rawdata();
 	return ERROR+" function not implemented in library";
 }
 
-
+/*
+ * Get specific PIDs unit
+ *
+ */
 String ELM::get_pid_unit(byte id) {
 	return ERROR+" function not implemented in library";
 }
 
-
+/*
+ * Get specific PIDs description
+ *
+ */
 String ELM::get_pid_desc(byte id) {
 	return ERROR+" function not implemented in library";
 }
 
+/*
+ * Get the vehicle identification number (vin)
+ *
+ */
 String ELM::get_vin() { // tested (without vehicle), response is NO DATA, works
 	return AT("0902");
 }
 
+/*
+ * Get the ecu name
+ *
+ */
 String ELM::get_ecu() { // tested (without vehicle), response is NO DATA, works
 	return AT("090A");
 }
 
+/*
+ * Get the car-batterys voltage
+ *
+ */
 String ELM::get_voltage() { // tested, works
 	return AT("ATRV");
 }
 
+/*
+ * Get the OBD protocol
+ *
+ */
 String ELM::get_protocol() { // tested, works
 	String data = AT("ATDP");
 	if (data.startsWith("AUTO")) {
@@ -120,6 +149,10 @@ String ELM::get_protocol() { // tested, works
 	return data;
 }
 
+/*
+ * Get the stored trouble codes
+ *
+ */
 String ELM::get_dtc() {  // tested, no parsing of error codes, works
 	String data = AT("03");
 	if (data.startsWith("43")) {
@@ -128,6 +161,10 @@ String ELM::get_dtc() {  // tested, no parsing of error codes, works
 	return data;
 }
 
+/*
+ * Clear trouble codes and malfunction indicator lamp (mil)
+ *
+ */
 boolean ELM::clear_dtc() { // tested (without present dtc's), works
 	if (AT("04").startsWith("44")) {
 		return true;
@@ -208,7 +245,7 @@ byte ELM::res2byte(String in, byte pos) {
 }	
  
 /*
- * Get complete list of supported PIDs
+ * Update the list of supported PIDs
  *
  */
 void ELM::update_available_pids(){
@@ -261,7 +298,7 @@ void ELM::update_available_pids(){
 }
 
 /*
- * Get supported PIDs defined by set (1-7)
+ * Update supported PIDs defined by set (1-7)
  *
  */
 void ELM::update_available_pidset(byte set) {
@@ -331,12 +368,11 @@ void ELM::update_available_pidset(byte set) {
 }	
 
 /*
- * ELM327 AT command and response handler
+ * ELM327 command and response handler
  *
  */
 String ELM::AT(String Cmd)
 {
-  String ErrorMessage = ""; // error message for errors in AT communication
   //generate command char array
   int len = Cmd.length();
   char cmd[len+1];
@@ -356,28 +392,28 @@ String ELM::AT(String Cmd)
       if (i<len) { //echo not complete
         response = UART->read();
         i++;
-        if (cmd[i-1]!=response){ //check echo characters
-        	return ERROR+"A "+ErrorMessage; // return error message
+        if (cmd[i-1]!=response){ // compare echo characters with command
+        	return ERROR+" ELM echo not complete"; // error message
         	break;
         }
       } 
       else { //echo complete
         response = UART->read();
         i++;
-        if (response!=62) {
-          if (response>=32) { //don't use control characters
+        if (response!=62) { // response not complete
+          if (response>=32) { //don't use control characters for response string
             Response += String(response);
           }
         } 
-        else {
+        else { // response complete
           return Response;
           break;
         }
       }
     }
-    //timeout
+    //check for timeout
     if ((unsigned long)(millis()-timestamp)>2000) {
-      return ERROR+"B "+ErrorMessage; // return error message
+      return ERROR+" ELM timeout"; // error message
       break;
     }
   }
