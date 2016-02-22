@@ -34,7 +34,7 @@ class Logger(object):
         """
         Writes a given string as a new line to the Logger's log.
         """
-        self.log_file.write("{0}\n".format(_line))
+        self.log_file.write("{0}".format(_line))
 
     def update(self, json):
         """
