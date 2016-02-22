@@ -121,15 +121,15 @@ String make_json(String _cmd, String _status, String _data = "") {
 }
 String make_jsondata_pid(BYTE pid, String value) {
   String data = "{\"pid\":"+(String)pid+",";
-  data += "\"value\":\""+value+"\",";
-  data += "\"unit\":\""+elm.get_pid_unit(pid)+"\",";
-  data += "\"desc\":\""+elm.get_pid_desc(pid)+"\"";
+  data += "\"value\":\""+value+/*"\",";*/"\"";
+  //data += "\"unit\":\""+elm.get_pid_unit(pid)+"\",";
+  //data += "\"desc\":\""+elm.get_pid_desc(pid)+"\"";
   data += "}";
   return data;
 }
 
 void respond(String data) {
-  usb_serial.print(String(data));
+  usb_serial.print(String(data)+'\n');
   //Bridge.put("data", data);
 }
 
@@ -154,7 +154,7 @@ void available_pids() {
 
 void read_all() {
   //if (debugging) usb_serial.println("[Debugging] linuino cmd: read_all()");
-  String data = "";
+  String data = "{\"cmd\":\"read_all\",\"status\":\"ok\",\"data\":[";
   boolean first = true;
   boolean error = false;
   for (int i = 0; i <= 255; i++) {
@@ -169,8 +169,10 @@ void read_all() {
       }
     }
   }
+  data += "]";
   if (!error) {
-    respond(make_json("read_all", "ok", "["+data+"]"));
+    usb_serial.println(data);
+    //respond(make_json("read_all", "ok", "["+data+"]"));
   } else {
     respond(make_json("read_all", "error"));
   }
@@ -182,7 +184,7 @@ void read_pid(BYTE pid) {
   if (!value.startsWith(elm.ERROR)) {
     respond(make_json("read_pid", "ok",  "["+make_jsondata_pid(pid,value)+"]"));
   } else {
-    respond(make_json("read_pid", "error"));
+    respond(make_json("read_pid", value));
   }
 }
 
@@ -222,8 +224,8 @@ void read_dtc() {
   String data = elm.get_dtc();  
   if (!data.startsWith(elm.ERROR)) {
      //for parsed dtc's
-    data.replace(",", "\",\"");
-    respond(make_json("read_dtc","ok", "[\""+data+"\"]"));
+    //data.replace(",", "\",\"");
+    //respond(make_json("read_dtc","ok", "[\""+data+"\"]"));
     respond(make_json("read_dtc","ok","\""+data+"\""));
   } else {
     respond(make_json("read_dtc","error"));
