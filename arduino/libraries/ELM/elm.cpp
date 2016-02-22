@@ -33,7 +33,9 @@ const String ELM::ERROR = "ERROR";
  *
  */
 boolean ELM::reset() { // tested, works
-	UART->clear();
+	while(UART->available()>0) {
+		UART->read();
+	}
 	if (AT("ATZ").startsWith("ELM327")) {
 		return true;
 	} else {

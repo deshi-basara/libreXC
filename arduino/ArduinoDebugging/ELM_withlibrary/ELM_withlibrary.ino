@@ -129,7 +129,7 @@ String make_jsondata_pid(BYTE pid, String value) {
 }
 
 void respond(String data) {
-  usb_serial.println(String(data));
+  usb_serial.print(String(data));
   //Bridge.put("data", data);
 }
 
