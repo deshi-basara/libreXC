@@ -67,12 +67,20 @@ class Logger(object):
         """
         Fetches the content of a log-file identified by id and returns it.
         """
+        id_string = id
+        id -= 1
         # get file from id
         files = os.listdir(Config.get_log_path())
-        requested_file = (files[id])
+        file_content = "Log with id {} does not exist!".format(id_string)
+        try:
+            requested_file = (files[id])
 
-        # read file content and return it
-        file_content = open(Config.get_log_path() + requested_file, "r").read()
+            # read file content and return it
+            file_content = open(
+                Config.get_log_path() + requested_file, "r").read()
+        except Exception:
+            print(file_content)
+
         return file_content
 
     @staticmethod
@@ -80,10 +88,16 @@ class Logger(object):
         """
         Removes a log-file identified by id from the logging-path.
         """
+        id_string = id
+        id -= 1
         # get file from id
         files = os.listdir(Config.get_log_path())
-        remove_file = (files[id])
+        try:
+            remove_file = (files[id])
 
-        # remove file
-        os.remove(Config.get_log_path() + remove_file)
+            # remove file
+            os.remove(Config.get_log_path() + remove_file)
+        except Exception:
+            print("Log with id {} does not exist!").format(id_string)
+
         return
