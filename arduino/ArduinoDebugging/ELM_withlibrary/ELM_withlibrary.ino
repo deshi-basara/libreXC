@@ -27,13 +27,11 @@ ELM elm(9,10);
 
 void setup() {
   elm.begin(9600);
-  linuino.begin(57600);
+  //linuino.begin(57600);
   usb_serial.begin(57600);
 }
 
 void loop() {
-	
-	elm.get_pid_data(0x05);
 	
   receiveData();
   if(checkPacket()) {
@@ -85,8 +83,8 @@ void sync() {
 
 BYTE nextByte() {
   while(TRUE) {
-    if (linuino.available()) {
-      return linuino.read();
+    if (usb_serial.available()) {
+      return usb_serial.read();
     }
   }
 }
@@ -131,7 +129,7 @@ String make_jsondata_pid(BYTE pid, String value) {
 }
 
 void respond(String data) {
-  if(debugging) usb_serial.println(data);
+  usb_serial.println(String(data));
   //Bridge.put("data", data);
 }
 
