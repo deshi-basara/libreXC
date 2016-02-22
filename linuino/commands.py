@@ -1,5 +1,6 @@
 import serial
 
+from config import Config
 from logger import Logger
 
 # dictionary of all available requests and their settings
@@ -176,7 +177,7 @@ class Commands(object):
 
         # send package
         try:
-            tty = serial.Serial(port='/dev/ttyATH0', baudrate=57600)
+            tty = serial.Serial(port=Config.get_tty_port(), baudrate=57600)
             tty.write(message)
             print("Request Command wrote to Serial: {0}".format(message))
         except Exception as e:

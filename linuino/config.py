@@ -12,6 +12,10 @@ class Config(object):
     """
 
     @staticmethod
+    def get_tty_port():
+        return config_file.get("auth", "port")
+
+    @staticmethod
     def get_user():
         return config_file.get("auth", "user")
 
