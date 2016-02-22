@@ -16,9 +16,9 @@ class Logger(object):
         # create log-file
         try:
             self.log_file = open(self.log_path + self.log_file_name, "w")
-        except IOError:
+        except IOError as e:
             # @todo error handling
-            print("Path for logfile does not exist: {0}".format(self.log_path))
+            print("Path for logfile does not exist: {0}".format(e.strerror))
 
     def make_stamp(self):
         """

@@ -108,7 +108,6 @@ class LibreSocketFactory(WebSocketServerFactory):
         """
         Broadcasts a json-string to all subscibed clients.
         """
-        print("broadcasting")
         for subscriber in self.subscribers:
             subscriber.sendMessage(json.encode("utf-8"))
 

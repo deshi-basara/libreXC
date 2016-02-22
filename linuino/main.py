@@ -40,7 +40,7 @@ def main():
         thread.start()
 
     # add observers to data-object
-    logger = Logger("default", data_thread)
+    logger = Logger("default")
     data_thread.add_observer(logger)
     data_thread.add_observer(socket_thread)
 
