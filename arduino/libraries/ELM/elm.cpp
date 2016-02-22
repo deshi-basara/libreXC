@@ -33,6 +33,7 @@ const String ELM::ERROR = "ERROR";
  *
  */
 boolean ELM::reset() { // tested, works
+	UART->clear();
 	if (AT("ATZ").startsWith("ELM327")) {
 		return true;
 	} else {
@@ -85,6 +86,9 @@ String ELM::get_pid_rawdata(byte id) {  // tested, works
 	if (data.startsWith((id<0x10)?"41 0"+String(id,HEX):"41 "+String(id,HEX))) {
 		data = data.substring(6);
 	}
+	if (data.endsWith(" ")) {
+		data = data. substring(0,data.length()-1);
+	}
 	return data;
 }
 
@@ -93,7 +97,8 @@ String ELM::get_pid_rawdata(byte id) {  // tested, works
  *
  */
 String ELM::get_pid_data(byte id) {
-	String rawdata = get_pid_rawdata(id);
+	return get_pid_rawdata(id);
+	/*String rawdata = get_pid_rawdata(id);
 
 	String myVal =  "";
 	String myUnit = "";
@@ -110,7 +115,7 @@ String ELM::get_pid_data(byte id) {
 	parsePID(id, data, &myVal, &myUnit, &myDesc);
 	//#endif
 	
-	return myVal+myUnit+myDesc;
+	return myVal+myUnit+myDesc;*/
 }
 
 /*
@@ -173,6 +178,9 @@ String ELM::get_dtc() {  // tested, no parsing of error codes, works
 	String data = AT("03");
 	if (data.startsWith("43")) {
 		data = data.substring(3);
+	}
+	if (data.endsWith(" ")) {
+		data = data. substring(0,data.length()-1);
 	}
 	return data;
 }
@@ -441,7 +449,7 @@ String ELM::AT(String Cmd)
       }
     }
     //check for timeout
-    if ((unsigned long)(millis()-timestamp)>2000) {
+    if ((unsigned long)(millis()-timestamp)>5000) {
       return ERROR+" ELM timeout"; // error message
       break;
     }
