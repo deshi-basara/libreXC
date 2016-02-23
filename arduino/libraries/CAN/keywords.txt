@@ -1,0 +1,4 @@
+CAN   				KEYWORD1
+begin				KEYWORD2
+send_frame			KEYWORD2
+get_frame			KEYWORD2
