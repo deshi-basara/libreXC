@@ -30,7 +30,7 @@ Run 'main.py' inside your virtualenv
 (venv)[linuino]$  python main.py
 ```
 
-After bootstrapping you can access the Socket-Api on '127.0.0.1:9001'. For low-level WebSocket communication we recommend [wscat](https://github.com/websockets/wscat) during development. While connecting to the Socket you need to transmit two additional authentication-headers ('user' and 'password'). All important parameters can be changed inside 'config.ini'
+After bootstrapping you can access the Socket-Api on `127.0.0.1:9001`. For low-level WebSocket communication we recommend [wscat](https://github.com/websockets/wscat) during development. While connecting to the Socket you need to transmit two additional authentication-headers (`user` and `password`). All important parameters can be changed inside `config.ini`
 
 ```Shell
 $  wscat -c ws://127.0.0.1:9001 -H user:admin -H password:admin
@@ -45,12 +45,12 @@ $  [libreXC] scp config.ini arduino@192.168.240.1:/mnt/sda1     # copy config
 $  [libreXC] scp -r ./linuino arduino@192.168.240.1:/mnt/sda1       # copy code
 ```
 
-Connect to your Linunio via 'ssh' and execute 'main.py'
+Connect to your Linunio via `ssh` and execute `main.py`
 ```Shell
 $  ssh ardunio@192.168.240.1 && python /mnt/sda1/linunio/main.py
 ```
 
-You are now able to connect to the Socket on '127.0.0.1:9001' with the authentication-headers 'user:admin' and 'password:admin' (can be changed inside 'config.ini').
+You are now able to connect to the Socket on `127.0.0.1:9001` with the authentication-headers `user:admin` and `password:admin` (can be changed inside 'config.ini').
 
 All available Socket-commands can be found in the [Comm Spec Linuino Client](https://github.com/deshi-basara/libreXC/wiki/Comm-Spec--Linuino---Client).
 
