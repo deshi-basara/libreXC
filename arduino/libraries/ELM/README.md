@@ -35,7 +35,10 @@ Serial.println("The value of " + myDesc + " is " + myValue + " "  + myUnit);
 
 ## Reading all supported PIDs
 
-**TODO**
+```cpp
+String supportedPIDs = myELM.get_supported_pids();
+Serial.println("PIDs supported: "+supportedPIDs);
+```
 
 ## Reading DTCs
 
@@ -47,7 +50,14 @@ Serial.println("The value of " + myDesc + " is " + myValue + " "  + myUnit);
 
 ## Reading Vehicle Information
 
-**TODO**
+```cpp
+String vin = myELM.get_vin();
+String ecu = myELM.get_ecu();
+String voltage = myELM.get_voltage();
+String protocol = myELM.get_protocol();
+
+Serial.println("vin: "+vin+", ecu: "+ecu+", voltage: "+voltage+", protocol: "+protocol);
+```
 
 ## Limitations
 
