@@ -101,13 +101,29 @@ Serial.println("vin: " + vin + ", ecu: " + ecu + ", voltage: " + voltage + ", pr
 
 ## Reset
 
-**TODO**
+You can reboot the ELM chip using the `reset()` function. Please note: The reset can take some time, the function will wait *up to 5 seconds* and check if the reboot was successful.
+
+```cpp
+if(myELM.reset()) {
+  Serial.println("Reboot successful");
+} else {
+  Serial.println("Error during reboot.");
+};
+```
 
 ## Constants
 
 Most of the functions return either a string or a boolean value. In all cases (except `pid_available()`) the value can be checked for errors. Functions with boolean return type return the error value directly. String functions can be checked against the ERROR-Constant.
 
-**TODO: ERROR-Constant**
+```cpp
+String raw = myELM.get_pid_rawdata(0x0C);
+if(raw.startsWith(ELM.ERROR)){
+  Serial.println("Sorry, could not retrieve rpm data, the error is: " + raw);
+} else {
+  Serial.println("Engine rpm data is: " + raw);
+}
+```
+
 
 ## Limitations
 
@@ -136,7 +152,8 @@ Mode 10 | Display permanent DTCs | :x: Not supported
 
 * Error Handling
 * Only automatic protocol detection, no manual protocol setting
-* 
+
+
 **TODO: desciption**
 
 ## Licence & Copyright
