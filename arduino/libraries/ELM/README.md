@@ -23,8 +23,9 @@ PIDs range from 0 to 255 and each one represents a specific sensor value.
 A list of PIDs is available on [Wikipedia](https://en.wikipedia.org/wiki/OBD-II_PIDs).
 Values for each PID get returned in a raw and partially unreadable form. 
 Luckily this library does the dirty job for you so you don't get your hands dirty. 
-All values come in the correct parsed form so you can use them directly.
+All values come in the correct parsed form so you can use them directly (with some limits, see "Code Size" below). 
 The values are returned as Strings however, so you might need to convert them to int, float or whatever you need.
+
 
 ```cpp
 byte pid = 0x05;
@@ -103,6 +104,8 @@ Serial.println("vin: " + vin + ", ecu: " + ecu + ", voltage: " + voltage + ", pr
 **TODO**
 
 ## Constants
+
+Most of the functions return either a string or a boolean value. In all cases (except `pid_available()`) the value can be checked for errors. Functions with boolean return type return the error value directly. String functions can be checked against the ERROR-Constant.
 
 **TODO: ERROR-Constant**
 
