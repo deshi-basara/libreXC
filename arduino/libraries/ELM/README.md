@@ -56,15 +56,23 @@ Serial.println(raw_dtcs);
 
 ## Clearing DTCs
 
-This function clears all stored DTCs in the ECU.
+This function clears all stored DTCs in the ECU. It returns `true` on successful execution and `false` on errors.
 
 ```cpp
-myELM.clear_dtc();
+boolean is_cleared = myELM.clear_dtc();
+
+if(is_cleared) {
+  Serial.println("DTCs cleared.");
+} else {
+  Serial.println("Oops, an error occured.");
+}
+
 ```
 
-**TODO**
 
 ## Reading Vehicle Information
+
+**TODO describe single functions/fields**
 
 ```cpp
 String vin = myELM.get_vin();
@@ -91,3 +99,9 @@ Unfortunately the lib, especially the private function `parsePID()` is pretty la
 * Mode 5,6,7,8 (not implemented)
 * Mode 9 (not all Mode 9 PIDs are supported)
 * Mode 10 (not implemented)
+* 
+
+## Licence & Copyright
+
+ELM lib was written by Simon Schuster, Florian Beck and Viktor Pavlovic.
+ELM lib is licensed under the [GNU General Public License v3](http://www.gnu.org/licenses/gpl-3.0). 
