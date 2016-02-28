@@ -1,5 +1,7 @@
 # ELM library
 
+ELM library is an Arduino library which handles communication with an [ELM327](http://www.elmelectronics.com/obdic.html) or ELM327 compatible chip used for car on-board diagnosis. It supports the display of current data (OBD Mode 1) and the display and clearing of diagnostic trouble codes (DTCs). Furthermore it is capable of displaying vehicle information like the [VIN](https://en.wikipedia.org/wiki/Vehicle_identification_number) and the ECU Model.
+
 ## Getting started
 
 Setting up the ELM library is fairly easy. 
@@ -35,12 +37,25 @@ Serial.println("The value of " + myDesc + " is " + myValue + " "  + myUnit);
 
 ## Reading all supported PIDs
 
-Each ECU supports different PIDs. To get a list of supported PIDs, `get_supported_pids()` can be used. It returns a comma-separated list. This function is for for informative purposes only. The lib checks for PID support on startup and allows only supported PIDs to be retrieved.
+`get_available_pids()` can be used to get the values of all supported PIDs  It returns a comma-separated list.
 
 ```cpp
 String supportedPIDs = myELM.get_supported_pids();
 Serial.println("PIDs supported: " + supportedPIDs);
 ```
+
+
+## List of supported PIDs
+
+Each ECU supports different PIDs. To check if a specific PID is supported, `pid_available()` can be used. This function is for for informative purposes only. The lib checks for PID support on startup and allows only supported PIDs to be retrieved.
+
+```cpp
+boolean rpm_supported = myELM.pid_available(0x0C);
+if(rpm_supported) {
+  Serial.println("This ECU supports display of engine RPM");
+}
+```
+
 
 ## Reading DTCs
 
@@ -83,6 +98,14 @@ String protocol = myELM.get_protocol();
 Serial.println("vin: " + vin + ", ecu: " + ecu + ", voltage: " + voltage + ", protocol: " + protocol);
 ```
 
+## Reset
+
+**TODO**
+
+## Constants
+
+**TODO: ERROR-Constant**
+
 ## Limitations
 
 This library has various limitations. 
@@ -91,15 +114,27 @@ This library has various limitations.
 
 Unfortunately the lib, especially the private function `parsePID()` is pretty large in size. `parsePID()` is responsible for parsing the received raw data and translating it into a human readable format. The lib currently supports ~75 different PIDs. Almost each PID requires a different formula, has a different description and the value has a different unit. This results in a total of **~30k** compiled code. This is too big to fit in the memory of the smaller Arduino types (Uno, Micro, Mini, Leonardo, Yun, ...). Therefore, on these plattforms the lib only parses the *most important* PIDs and returns the rest unparsed. Full parsing is supported on [Arduino Mega](https://www.arduino.cc/en/Main/ArduinoBoardMega2560).   
 
+### OBD mode support
+
+OBD Mode | Description | Support
+------------ | ------------- | -------------
+Mode 1 | Current data | :white_check_mark: **Supported** (not all PIDs supported; code size limitations, see above)
+Mode 2 | Freeze frame data | :x: Not supported
+Mode 3 | Display stored DTCs | :white_check_mark: **Supported**, but no parsing of data
+Mode 4 | Clear DTCs | :white_check_mark: **Supported**
+Mode 5 | Oxygen sensor monitoring test results | :x: Not supported
+Mode 6 | other component/system monitoring | :x: Not supported
+Mode 7 | Display pending DTCs | :x: Not supported
+Mode 8 | Control operation of on-board component/system | :x: Not supported
+Mode 9 | Vehicle information | :o: **Partially** (VIN and ECU name)
+Mode 10 | Display permanent DTCs | :x: Not supported
+
 ### Other limitations
 
 * Error Handling
-* Mode 1 (not all PIDs supported)
-* Mode 2 (not implemented)
-* Mode 5,6,7,8 (not implemented)
-* Mode 9 (not all Mode 9 PIDs are supported)
-* Mode 10 (not implemented)
+* Only automatic protocol detection, no manual protocol setting
 * 
+**TODO: desciption**
 
 ## Licence & Copyright
 
