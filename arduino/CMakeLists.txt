@@ -8,5 +8,5 @@ project(libreXC C CXX)
 
 include(CMakeConfig.txt)
 
-generate_arduino_firmware(ArduinOBD
-    SKETCH ArduinOBD)
+generate_arduino_firmware(librexc
+    SKETCH src)
