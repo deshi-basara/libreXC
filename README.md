@@ -1,10 +1,18 @@
-libreXC
-=======
+#libreXC
+**Contributors:** [deshi-basara](https://github.com/deshi-basara), [vpav](https://github.com/vpav), [florianbeck](https://github.com/florianbeck)   
+**License:** GPLv3 ([http://www.gnu.org/licenses/gpl-3.0.html](http://www.gnu.org/licenses/gpl-3.0.html))
 
-libreXC is a free, open car hacking tool for reading vehicle data via Arduino.
+A free, open car hacking tool for reading vehicle data via Arduino.
+
+## Description
+`libreXC` is a free, open car hacking tool for reading vehicle data via Arduino Yún. The project is consisting of two parts:
+
+1. [arduino](arduino) — for reading and parsing vehicle information with an ELM chip
+2. [linuino](linuino) — reading and logging the data from arduino via websocket
+
+**Note:** The Arduino-Part uses `libELM`, which ist also part of this project, but hosted in a [separate repository](https://github.com/deshi-basara/libELM).
 
 
-### Recommended Hardware
-========================
+## Recommended Hardware
 * [Arduino Yun](https://www.arduino.cc/en/Main/ArduinoBoardYun)
 * [SparkFun OBD-II UART](https://www.sparkfun.com/products/9555)

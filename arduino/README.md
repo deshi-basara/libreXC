@@ -1,4 +1,4 @@
-## arduino cmake
+## arduino
 
 ### Systemvoraussetzungen 
 
@@ -6,6 +6,9 @@
 
   - ``CMake`` - http://www.cmake.org/cmake/resources/software.html
   - ``Arduino SDK`` - http://www.arduino.cc/en/Main/Software
+
+* Verwendete Arduino Libraries:
+  - ``libELM`` - https://github.com/deshi-basara/libELM
 
 * Zusätzlich für Linux:
 
