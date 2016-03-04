@@ -5,6 +5,8 @@
 
 A free, open car hacking tool for reading vehicle data via Arduino.
 
+**Note:** Have a look at the [libreXC wiki](https://github.com/deshi-basara/libreXC/wiki) as well.
+
 ## Description
 `libreXC` is a free, open car hacking tool for reading vehicle data via Arduino Yún. The project is consisting of two parts:
 
